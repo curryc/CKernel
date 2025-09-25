@@ -1,4 +1,6 @@
 ; boot/boot.asm
+; 如果有GRUB支持，只需要此文件一个即可，无需bootsect和bootstage2
+; 此项目并未使用此文件
 bits 32
 
 section .multiboot

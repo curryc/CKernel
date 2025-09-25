@@ -1,4 +1,4 @@
-/* linker.ld  */
+/* linkerself.ld - 用于自引导方式 */
 ENTRY(kernel_main)
 
 SECTIONS

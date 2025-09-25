@@ -185,7 +185,7 @@ check_long_mode:
 msg_32bit db 'In Protected Mode (32-bit)', 0
 msg_no_long_mode db 'Long mode not supported!', 0
 
-; 页表设置 (恒等映射前4GB)
+; 页表设置 (恒等映射前1GB)
 ALIGN 4096
 paging_page_table:
     ; PML4表 (第一个条目)
@@ -198,12 +198,14 @@ paging_pdpt:
     times 511 dd 0
 
 paging_pd:
-    ; PD表 (512个条目, 每个映射1GB)
+    ; PD表 (64个条目, 每个映射16MB)
     %assign i 0
-    %rep 512
+    %rep 64
         dd (i << 22) | 0x83 ; 读/写, 存在, 4MB页面
         %assign i i+1
     %endrep
+    times (512-64) dd 0
+
 
 ; 64位GDT
 gdt64:
@@ -245,7 +247,9 @@ long_mode_start:
     call print_string64
 
     ; 调用内核主函数
-    call kernel_main
+    ; 我们不能使用extern，因为这是二进制输出格式
+    ; 相反，我们直接跳转到内核入口点（由链接器放置在0x100000）
+    call 0x100000
 
     ; 如果kernel_main返回，则无限循环
 .end:
@@ -271,4 +275,5 @@ print_string64:
 
 msg_64bit db 'In Long Mode (64-bit) - Kernel Starting', 0
 
-times 2048-($-$$) db 0 ; 确保第二阶段至少占用2个扇区
+; 确保第二阶段引导程序占用32个扇区(16384字节)
+times 32*512-($-$$) db 0
