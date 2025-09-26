@@ -1,3 +1,4 @@
+Makefile
 # ---------- 工具链 ----------
 CROSS_COMPILE := x86_64-linux-gnu-
 CC            := $(CROSS_COMPILE)gcc
@@ -43,10 +44,11 @@ $(STAGE2_BIN): boot/bootstage2.asm
 	$(AS) -f bin boot/bootstage2.asm -o $@
 
 # ---------- 自引导方式内核 ----------
-$(KERNEL_SELF_ELF): kernel/main.c boot/linkerself.ld
+$(KERNEL_SELF_ELF): kernel/main.c kernel/pmm.c kernel/pmm.h boot/linkerself.ld
 	@mkdir -p build/selfboot
 	$(CC) $(CFLAGS) -c kernel/main.c -o build/selfboot/main.o
-	$(CC) $(LDFLAGS_SELFBOOT) -o $@ build/selfboot/main.o
+	$(CC) $(CFLAGS) -c kernel/pmm.c -o build/selfboot/pmm.o
+	$(CC) $(LDFLAGS_SELFBOOT) -o $@ build/selfboot/main.o build/selfboot/pmm.o
 
 $(KERNEL_SELF_BIN): $(KERNEL_SELF_ELF)
 	$(OBJCOPY) -O binary $< $@
@@ -59,16 +61,17 @@ $(FLOPPY_IMG): $(BOOTSECT_BIN) $(STAGE2_BIN) $(KERNEL_SELF_BIN)
 	# 写入引导扇区
 	dd if=$(BOOTSECT_BIN) of=$@ bs=512 count=1 conv=notrunc 2>/dev/null
 	# 写入第二阶段引导程序
-	dd if=$(STAGE2_BIN) of=$@ bs=512 seek=1 count=16 conv=notrunc 2>/dev/null
+	dd if=$(STAGE2_BIN) of=$@ bs=512 seek=1 count=32 conv=notrunc 2>/dev/null
 	# 写入内核
-	dd if=$(KERNEL_SELF_BIN) of=$@ bs=512 seek=20 conv=notrunc 2>/dev/null
+	dd if=$(KERNEL_SELF_BIN) of=$@ bs=512 seek=33 conv=notrunc 2>/dev/null
 
 # ---------- GRUB引导方式内核 ----------
-$(KERNEL_GRUB_ELF): boot/boot.asm kernel/main.c boot/linker.ld
+$(KERNEL_GRUB_ELF): boot/boot.asm kernel/main.c kernel/pmm.c kernel/pmm.h boot/linker.ld
 	@mkdir -p build/grub
 	$(AS) -f elf64 boot/boot.asm -o build/grub/boot.o
 	$(CC) $(CFLAGS) -c kernel/main.c -o build/grub/main.o
-	$(CC) $(LDFLAGS_GRUB) -o $@ build/grub/boot.o build/grub/main.o
+	$(CC) $(CFLAGS) -c kernel/pmm.c -o build/grub/pmm.o
+	$(CC) $(LDFLAGS_GRUB) -o $@ build/grub/boot.o build/grub/main.o build/grub/pmm.o
 
 # ---------- GRUB引导方式ISO镜像 ----------
 $(ISO): $(KERNEL_GRUB_ELF)
@@ -95,7 +98,7 @@ $(ISO): $(KERNEL_GRUB_ELF)
 
 # ---------- 运行自引导方式 ----------
 run-selfboot: $(FLOPPY_IMG)
-	qemu-system-x86_64 -fda $< -m 128M -serial stdio -boot a
+	qemu-system-x86_64 -fda build/selfboot/floppy.img -boot a -m 128M -serial stdio
 
 # ---------- 运行GRUB引导方式 ----------
 run-grub: $(ISO)
