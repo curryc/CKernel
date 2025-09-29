@@ -1,0 +1,192 @@
+/**
+ * @file io.cpp
+ * @brief 
+ * @author curryc (chencurry5@gmail.com)
+ * @date 2025-09-29
+ */
+
+#include <cstdarg>
+#include <cstring>
+#include <cstdio>
+#ifndef __riscv
+#    include "port.h"
+#endif
+#include "io.h"
+
+IO& IO::get_instance(void) {
+    /// 定义全局 IO 对象
+    static IO io;
+    return io;
+}
+uint8_t IO::inb(const uint32_t port) {
+    return port::inb(port);
+}
+
+uint16_t IO::inw(const uint32_t port) {
+    return port::inw(port);
+}
+
+uint32_t IO::ind(const uint32_t port) {
+    return port::ind(port);
+}
+
+void IO::outb(const uint32_t port, const uint8_t data) {
+    port::outb(port, data);
+    return;
+}
+
+void IO::outw(const uint32_t port, const uint16_t data) {
+    port::outw(port, data);
+    return;
+}
+
+void IO::outd(const uint32_t port, const uint32_t data) {
+    port::outd(port, data);
+    return;
+}
+
+// MMIO 实现
+uint8_t IO::read8(void* _addr) {
+    return *(uint8_t*)_addr;
+}
+
+void IO::write8(void* _addr, uint8_t _val) {
+    *(uint8_t*)_addr = _val;
+    return;
+}
+
+uint16_t IO::read16(void* _addr) {
+    return *(uint16_t*)_addr;
+}
+
+void IO::write16(void* _addr, uint16_t _val) {
+    *(uint16_t*)_addr = _val;
+    return;
+}
+
+uint32_t IO::read32(void* _addr) {
+    return *(uint32_t*)_addr;
+}
+
+void IO::write32(void* _addr, uint32_t _val) {
+    *(uint32_t*)_addr = _val;
+    return;
+}
+
+uint64_t IO::read64(void* _addr) {
+    return *(uint64_t*)_addr;
+}
+
+void IO::write64(void* _addr, uint64_t _val) {
+    *(uint64_t*)_addr = _val;
+    return;
+}
+
+// 输出
+/**
+ * @brief 获取颜色
+ * @return COLOR::color_t 
+ */
+COLOR::color_t IO::get_color(void) {
+    return io.get_color();
+}
+
+/**
+ * @brief 设置颜色
+ * @param  color
+ */
+void IO::set_color(const COLOR::color_t color) {
+    io.set_color(color);
+    return;
+}
+
+/**
+ * @brief 输出一个字符
+ * @param  c
+ */
+void IO::put_char(char c) {
+    io.put_char(c);
+    return;
+}
+
+/**
+ * @brief 输出字符串
+ * @param  s
+ * @return int32_t 
+ */
+int32_t IO::write_string(const char* s) {
+    io.write_string(s);
+    return 0;
+}
+
+/// 输出缓冲区
+char               buf[IO::BUF_SIZE];
+
+/**
+ * @brief printf 定义
+ * @param  _fmt           格式化字符串
+ * @return int32_t        输出的长度
+ */
+extern "C" int32_t printf(const char* _fmt, ...) {
+    va_list va;
+    va_start(va, _fmt);
+    // 处理格式，并将处理好的字符串保存到 buf 中
+    const int ret = _vsnprintf(buf, IO::BUF_SIZE, _fmt, va);
+    va_end(va);
+    // 输出 buf
+    IO::get_instance().write_string(buf);
+    // 清空数据
+    bzero(buf, IO::BUF_SIZE);
+    return ret;
+}
+
+/**
+ * @brief 与 printf 类似，只是颜色不同
+ */
+extern "C" int32_t info(const char* _fmt, ...) {
+    COLOR::color_t curr_color = IO::get_instance().get_color();
+    IO::get_instance().set_color(COLOR::CYAN);
+    va_list va;
+    int32_t i;
+    va_start(va, _fmt);
+    i = vsnprintf_(buf, IO::BUF_SIZE, _fmt, va);
+    va_end(va);
+    IO::get_instance().write_string(buf);
+    bzero(buf, IO::BUF_SIZE);
+    IO::get_instance().set_color(curr_color);
+    return i;
+}
+
+/**
+ * @brief 与 printf 类似，只是颜色不同
+ */
+extern "C" int32_t warn(const char* _fmt, ...) {
+    COLOR::color_t curr_color = IO::get_instance().get_color();
+    IO::get_instance().set_color(COLOR::YELLOW);
+    va_list va;
+    int32_t i;
+    va_start(va, _fmt);
+    i = vsnprintf_(buf, IO::BUF_SIZE, _fmt, va);
+    va_end(va);
+    IO::get_instance().write_string(buf);
+    bzero(buf, IO::BUF_SIZE);
+    IO::get_instance().set_color(curr_color);
+    return i;
+}
+
+/**
+ * @brief 与 printf 类似，只是颜色不同
+ */
+extern "C" int32_t err(const char* _fmt, ...) {
+    COLOR::color_t curr_color = IO::get_instance().get_color();
+    IO::get_instance().set_color(COLOR::LIGHT_RED);
+    va_list va;
+    int32_t i;
+    va_start(va, _fmt);
+    i = vsnprintf_(buf, IO::BUF_SIZE, _fmt, va);
+    va_end(va);
+    IO::get_instance().write_string(buf);
+    bzero(buf, IO::BUF_SIZE);
+    IO::get_instance().set_color(curr_color);
+    return i;
+}
