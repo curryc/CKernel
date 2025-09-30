@@ -17,7 +17,7 @@ extern "C"
 {
 #endif
 
-    int _vsnprintf(char *_buffer, const size_t _maxlen, const char *_format,
+int _vsnprintf(char *_buffer, const size_t _maxlen, const char *_format,
                    va_list _va);
 
 #ifdef __cplusplus

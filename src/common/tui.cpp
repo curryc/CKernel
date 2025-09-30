@@ -23,7 +23,7 @@ TUI::TUI(){
     set_pos(pos_t(0, 0));
 }
 
-void TUI::set_color(const COLOR::color_t _fore, const COLOR::color_t _back = COLOR::BLACK){
+void TUI::set_color(const COLOR::color_t _fore, const COLOR::color_t _back){
     this->color = col_t(_fore, _back);
 }
 

@@ -7,7 +7,16 @@ include_directories(./include)
 # 内核静态库
 add_library(kernel_grub STATIC
     kernel_main.cpp
+    io.cpp
     pmm.cpp
+)
+
+# 链接libc和libcxx
+target_link_libraries(kernel_grub PRIVATE 
+    libc 
+    libcxx
+    common
+    platform
 )
 
 # 设置C++编译选项

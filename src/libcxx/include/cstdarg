@@ -1,0 +1,21 @@
+/**
+ * @file cstdarg
+ * @brief 
+ * @author cbw (chenboven@qq.com)
+ * @date 2025-09-30
+ */
+
+#ifndef SIMPLEKERNEL_CSTDARG
+#define SIMPLEKERNEL_CSTDARG
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "stdarg.h"
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* SIMPLEKERNEL_CSTDARG */

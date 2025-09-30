@@ -1,9 +1,12 @@
 # src/platform/CMakeLists.txt
-# 平台支持的主CMakeLists.txt
+project(platform)
+
+add_library(platform INTERFACE)
 
 # 添加各平台支持
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/x86_64)
     add_subdirectory(x86_64)
+    target_link_libraries(platform INTERFACE boot_grub_x86_64 port)
 endif()
 
 # if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/aarch64)
