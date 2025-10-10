@@ -8,8 +8,10 @@
 #define CKERNEL_TUI_H
 
 #include "color.h"
-#include "cstddef"
+#include "cstdef"
 #include "cstdint"
+#include "cstring"
+#include "port.h"
 
 /**
  * @brief 位置信息

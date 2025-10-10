@@ -8,6 +8,19 @@ void* memset(void* _dest, int _val, size_t _len) {
     return _dest;
 }
 
-void bzero(void* _dest, uint32_t _len) {
+void bzero(void* _dest, size_t _len) {
     memset(_dest, 0, _len);
+}
+
+/**
+ * @brief 字符串长度
+ * @param  _str
+ * @return size_t 
+ */
+size_t strlen(const char* _str) {
+    size_t len = 0;
+    while (_str[len]) {
+        len++;
+    }
+    return len;
 }

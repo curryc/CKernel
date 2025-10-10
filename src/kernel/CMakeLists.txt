@@ -11,7 +11,7 @@ add_library(kernel_grub STATIC
     pmm.cpp
 )
 
-# 链接libc和libcxx
+# 链接
 target_link_libraries(kernel_grub PRIVATE 
     libc 
     libcxx

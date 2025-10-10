@@ -20,8 +20,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
 include_directories(include)
 
 # 添加子目录
-add_subdirectory(platform)
 add_subdirectory(kernel)
+add_subdirectory(platform)
 add_subdirectory(selfboot)
 add_subdirectory(libc)
 add_subdirectory(libcxx)
@@ -32,8 +32,8 @@ if(TARGET boot_grub_x86_64)
     # GRUB相关目标
     # 链接成 ELF
     add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/grub/kernel.elf
-        COMMAND ${CMAKE_CXX_COMPILER} -T${CMAKE_CURRENT_SOURCE_DIR}/platform/x86_64/linker.ld -no-pie -nostdlib -mcmodel=large -m64 -fno-exceptions -fno-rtti $<TARGET_OBJECTS:boot_grub_x86_64> $<TARGET_FILE:kernel_grub> $<TARGET_FILE:common> $<TARGET_FILE:libc> $<TARGET_FILE:libcxx> -o ${CMAKE_BINARY_DIR}/grub/kernel.elf
-        DEPENDS kernel_grub boot_grub_x86_64 common libc libcxx
+        COMMAND ${CMAKE_CXX_COMPILER} -T${CMAKE_CURRENT_SOURCE_DIR}/platform/x86_64/linker.ld -no-pie -nostdlib -mcmodel=large -m64 -fno-exceptions -fno-rtti $<TARGET_OBJECTS:boot_grub_x86_64> $<TARGET_OBJECTS:port> $<TARGET_FILE:kernel_grub> $<TARGET_FILE:common> $<TARGET_FILE:libc> $<TARGET_FILE:libcxx> -lstdc++ -lgcc -o ${CMAKE_BINARY_DIR}/grub/kernel.elf
+        DEPENDS kernel_grub boot_grub_x86_64 common libc libcxx port
         COMMENT "Linking kernel.elf (GRUB)"
     )
 

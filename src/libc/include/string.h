@@ -19,7 +19,7 @@ extern void*  memcpy(void* _dest, const void* _src, size_t _len);
 extern void*  memset(void* _dest, int val, size_t _len);
 extern int    memcmp(const void* _str1, const void* _str2, size_t _count);
 extern void*  memmove(void* _dest, const void* _src, size_t _len);
-extern void   bzero(void* _dest, uint32_t _len);
+extern void   bzero(void* _dest, size_t _len) ;
 // 字符串比较
 extern int    strcmp(const char* _src, const char* _dest);
 extern int    strncmp(const char* _s1, const char* _s2, size_t _n);
