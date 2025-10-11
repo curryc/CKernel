@@ -4,12 +4,9 @@
 # 添加头文件目录
 include_directories(./include)
 
-# 内核静态库
-add_library(kernel_grub STATIC
-    kernel_main.cpp
-    io.cpp
-    pmm.cpp
-)
+aux_source_directory(./src cxx_src)
+
+add_library(kernel_grub STATIC ${cxx_src})
 
 # 链接
 target_link_libraries(kernel_grub PRIVATE 
@@ -41,6 +38,9 @@ target_compile_options(kernel_grub PRIVATE
         -fno-exceptions -fno-rtti
     >
 )
+
+# 禁用位置无关代码
+set_property(TARGET kernel_grub PROPERTY POSITION_INDEPENDENT_CODE OFF)
 
 set_target_properties(kernel_grub PROPERTIES
     ARCHIVE_OUTPUT_NAME kernel_grub

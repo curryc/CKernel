@@ -102,6 +102,8 @@ void IO::put_char(char c) {
     return;
 }
 
+#include "cstdio"
+
 // 输出缓冲
 char buf[IO::BUF_SIZE];
 /**
@@ -109,10 +111,6 @@ char buf[IO::BUF_SIZE];
  * @param  s
  * @return int32_t 
  */
-int32_t IO::write_string(const char* s) {
-    io.write_string(s);
-    return 0;
-}
 extern "C" int32_t printf(const char* _fmt, ...) {
     va_list va;
     va_start(va, _fmt);

@@ -172,41 +172,4 @@ public:
      */
     int32_t write_string(const char *_s);
 };
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-    /**
-     * @brief 输出格式化字符串
-     * @param  _fmt
-     * @param  ...
-     * @return int32_t
-     */
-    int32_t printf(const char *_fmt, ...);
-    /**
-     * @brief 输入格式化字符串，颜色为青色
-     * @param  _fmt
-     * @param  ...
-     * @return int32_t
-     */
-    int32_t info(const char *_fmt, ...);
-    /**
-     * @brief 输入格式化字符串，颜色为黄色
-     * @param  _fmt
-     * @param  ...
-     * @return int32_t
-     */
-    int32_t warn(const char *_fmt, ...);
-    /**
-     * @brief 输入格式化字符串，颜色为红色
-     * @param  _fmt
-     * @param  ...
-     * @return int32_t
-     */
-    int32_t err(const char *_fmt, ...);
-#ifdef __cplusplus
-}
-#endif
-
 #endif

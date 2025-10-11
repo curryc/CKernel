@@ -10,11 +10,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # 禁用堆栈保护和格式字符串检查
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-stack-protector -U_FORTIFY_SOURCE")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-stack-protector -U_FORTIFY_SOURCE")
-
-# 启用C++异常支持
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-stack-protector -U_FORTIFY_SOURCE -fno-pic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-stack-protector -U_FORTIFY_SOURCE -fno-pic -fno-exceptions -fno-rtti")
+set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS} -f elf64")
 
 # 添加头文件目录
 include_directories(include)
@@ -32,7 +30,7 @@ if(TARGET boot_grub_x86_64)
     # GRUB相关目标
     # 链接成 ELF
     add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/grub/kernel.elf
-        COMMAND ${CMAKE_CXX_COMPILER} -T${CMAKE_CURRENT_SOURCE_DIR}/platform/x86_64/linker.ld -no-pie -nostdlib -mcmodel=large -m64 -fno-exceptions -fno-rtti $<TARGET_OBJECTS:boot_grub_x86_64> $<TARGET_OBJECTS:port> $<TARGET_FILE:kernel_grub> $<TARGET_FILE:common> $<TARGET_FILE:libc> $<TARGET_FILE:libcxx> -lstdc++ -lgcc -o ${CMAKE_BINARY_DIR}/grub/kernel.elf
+        COMMAND ${CMAKE_CXX_COMPILER} -T${CMAKE_CURRENT_SOURCE_DIR}/platform/x86_64/linker.ld -no-pie -nostdlib -mcmodel=large -m64 -fno-exceptions -fno-rtti -fno-pic $<TARGET_OBJECTS:boot_grub_x86_64> $<TARGET_OBJECTS:port> $<TARGET_FILE:kernel_grub> $<TARGET_FILE:common> $<TARGET_FILE:libc> $<TARGET_FILE:libcxx> -lgcc -o ${CMAKE_BINARY_DIR}/grub/kernel.elf
         DEPENDS kernel_grub boot_grub_x86_64 common libc libcxx port
         COMMENT "Linking kernel.elf (GRUB)"
     )

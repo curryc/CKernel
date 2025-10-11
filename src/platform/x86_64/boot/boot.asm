@@ -22,6 +22,8 @@ multiboot_end:
 
 section .text
 global _start
+
+extern cpp_init
 extern kernel_main
 
 _start:
@@ -42,6 +44,7 @@ _start:
     
     ; 调用C主函数
     push 0                      ; multiboot info指针
+    call cpp_init
     call kernel_main
     add esp, 4                  ; 清理堆栈参数
 

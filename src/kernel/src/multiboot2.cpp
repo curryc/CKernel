@@ -1,0 +1,99 @@
+/**
+ * @file multiboot2.cpp
+ * @brief
+ * @author cbw (chenboven@qq.com)
+ * @date 2025-10-11
+ */
+
+#include "multiboot2.h"
+#include "cassert"
+#include "common.h"
+
+MULTIBOOT2 &MULTIBOOT2::get_instance(void)
+{
+    static MULTIBOOT2 instance;
+    return instance;
+}
+
+bool MULTIBOOT2::multiboot2_init(void)
+{
+    uintptr_t addr = BOOT_INFO::boot_info_addr;
+    // 判断魔数是否正确
+    assert(BOOT_INFO::multiboot2_magic == MULTIBOOT2_BOOTLOADER_MAGIC);
+    assert((reinterpret_cast<uintptr_t>(addr) & 7) == 0);
+    // addr+0 保存大小
+    BOOT_INFO::boot_info_size = *(uint32_t *)addr;
+    return true;
+}
+
+void MULTIBOOT2::multiboot2_iter(bool (*_fun)(const iter_data_t *, void *), void *_data)
+{
+    uintptr_t    addr = BOOT_INFO::boot_info_addr;
+    // 下一字节开始为 tag 信息
+    iter_data_t* tag  = (iter_data_t*)(addr + 8);
+    for (; tag->type != MULTIBOOT_TAG_TYPE_END;
+         tag = (iter_data_t*)((uint8_t*)tag + common::ALIGN(tag->size, 8))) {
+        if (_fun(tag, _data) == true) {
+            return;
+        }
+    }
+    return;
+}
+
+bool MULTIBOOT2::get_memory(const iter_data_t *_iter_data, void *_data)
+{
+    if (_iter_data->type != MULTIBOOT2::MULTIBOOT_TAG_TYPE_MMAP) {
+        return false;
+    }
+    resource_t* resource  = (resource_t*)_data;
+    resource->type       |= resource_t::MEM;
+    resource->name        = (char*)"available phy memory";
+    resource->mem.addr    = 0x0;
+    resource->mem.len     = 0;
+    MULTIBOOT2::multiboot_mmap_entry_t* mmap
+      = ((MULTIBOOT2::multiboot_tag_mmap_t*)_iter_data)->entries;
+    for (; (uint8_t*)mmap < (uint8_t*)_iter_data + _iter_data->size;
+         mmap
+         = (MULTIBOOT2::
+              multiboot_mmap_entry_t*)((uint8_t*)mmap
+                                       + ((MULTIBOOT2::multiboot_tag_mmap_t*)
+                                            _iter_data)
+                                           ->entry_size)) {
+        // 如果是可用内存或地址小于 1M
+        // 这里将 0~1M 的空间全部算为可用，在 c++ 库可用后进行优化
+        if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE
+            || mmap->addr < 1 * common::MB) {
+            // 长度+
+            resource->mem.len += mmap->len;
+        }
+    }
+    return true;
+}
+
+namespace BOOT_INFO
+{
+    bool inited = false;
+
+    bool init(void)
+    {
+        auto res = MULTIBOOT2::get_instance().multiboot2_init();
+        if (inited == false)
+        {
+            inited = true;
+            info("BOOT_INFO init.\n");
+        }
+        else
+        {
+            info("BOOT_INFO reinit.\n");
+        }
+        return res;
+    }
+
+    resource_t get_memory(void)
+    {
+        resource_t resource;
+        MULTIBOOT2::get_instance().multiboot2_iter(MULTIBOOT2::get_memory,
+                                                   &resource);
+        return resource;
+    }
+};

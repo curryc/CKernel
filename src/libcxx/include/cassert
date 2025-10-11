@@ -12,10 +12,10 @@
 extern "C" {
 #endif
 
-#include "stdarg.h"
+#include "assert.h"
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CKERNEL_CSTDARG */
+#endif

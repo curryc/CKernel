@@ -25,8 +25,8 @@ extern "C" {
 
 typedef void (*ctor_t)(void);
 // 在 link.ld 中定义
-// extern ctor_t    __init_array_start[];
-// extern ctor_t    __init_array_end[];
+extern ctor_t    __init_array_start[];
+extern ctor_t    __init_array_end[];
 
 typedef unsigned uarch_t;
 
@@ -41,13 +41,13 @@ struct atexit_func_entry_t {
     void* dso_handle;
 };
 
-// void cpp_init(void) {
-//     ctor_t* f;
-//     for (f = __init_array_start; f < __init_array_end; f++) {
-//         (*f)();
-//     }
-//     return;
-// }
+void cpp_init(void) {
+    ctor_t* f;
+    for (f = __init_array_start; f < __init_array_end; f++) {
+        (*f)();
+    }
+    return;
+}
 
 void __cxa_pure_virtual(void) {
     return;
@@ -74,6 +74,11 @@ void __cxa_end_catch() {
 }
 
 void __gxx_personality_v0() {
+    return;
+}
+
+void operator delete(void*, unsigned long) {
+    // 在内核中我们不实现实际的内存释放
     return;
 }
 

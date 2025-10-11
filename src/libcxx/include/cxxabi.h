@@ -9,46 +9,53 @@
 #define CKERNEL_CXXABI_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-// c++ 初始化
-// void cpp_init(void);
+    /**
+     * @brief C++初始化函数，会被入口汇编调用，用于初始化Cpp环境
+     * 遍历__init_array_start到__init_array_end之间的函数指针数组
+     * 依次调用每个构造函数，完成全局/静态对象的构造
+     */
+    void cpp_init(void);
 
-int  __cxa_atexit(void (*f)(void*), void* objptr, void* dso);
-void __cxa_finalize(void* f);
+    int __cxa_atexit(void (*f)(void *), void *objptr, void *dso);
+    void __cxa_finalize(void *f);
 
-int  __aeabi_atexit(void (*f)(void*), void* objptr, void* dso);
-void __cxa_finalize(void* f);
+    int __aeabi_atexit(void (*f)(void *), void *objptr, void *dso);
+    void __cxa_finalize(void *f);
 
 #if UINT32_MAX == UINTPTR_MAX
-#    define STACK_CHK_GUARD 0xe2dee396
+#define STACK_CHK_GUARD 0xe2dee396
 #else
-#    define STACK_CHK_GUARD 0x595e9fbd94fda766
+#define STACK_CHK_GUARD 0x595e9fbd94fda766
 #endif
 
 #ifdef __cplusplus
 };
 #endif
 
-namespace std {
-class type_info {
-private:
-    const char* tname;
+namespace std
+{
+    class type_info
+    {
+    private:
+        const char *tname;
 
-public:
-    virtual ~type_info(void);
+    public:
+        virtual ~type_info(void);
 
-    type_info(const type_info&);
+        type_info(const type_info &);
 
-    explicit type_info(const char*);
+        explicit type_info(const char *);
 
-    const char* name(void) const;
+        const char *name(void) const;
 
-    bool        operator==(const type_info&) const;
+        bool operator==(const type_info &) const;
 
-    bool        operator!=(const type_info&) const;
-};
-}    // namespace std
+        bool operator!=(const type_info &) const;
+    };
+} // namespace std
 
 #endif

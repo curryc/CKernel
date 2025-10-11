@@ -23,6 +23,12 @@ col_t::~col_t(void) {
     return;
 }
 
+char_t::char_t(void) 
+    : c(0)
+    , color(col_t(COLOR::WHITE, COLOR::BLACK))
+{
+    return;
+}
 char_t::char_t(const uint8_t _c, const col_t _color)
     : c(_c)
     , color(_color)

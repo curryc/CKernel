@@ -4,8 +4,8 @@
  * @author cbw (chenboven@qq.com)
  * @date 2025-09-29
  */
-#ifndef CKERNEL_CSTDINT
-#define CKERNEL_CSTDINT
+#ifndef CKERNEL_CSTDIO
+#define CKERNEL_CSTDIO
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,4 +17,4 @@ extern "C" {
 }
 #endif
 
-#endif /* CKERNEL_CSTDINT */
+#endif
