@@ -9,6 +9,7 @@
 
 #include "cstdint"
 #include "cstddef"
+#include "allocator.h"
 
 /**
  * @brief 用来管理物理内存的类

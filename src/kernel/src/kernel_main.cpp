@@ -38,7 +38,7 @@ void test_vga()
  */
 void kernel_main()
 {
-    mmu_init();
+    PMM::get_instance().init();
     test();
     // test_vga();
     // 无限循环

@@ -4,7 +4,7 @@
 enable_language(ASM_NASM)
 
 # 为x86_64平台创建引导对象
-add_library(boot_grub_x86_64 OBJECT boot/boot.asm)
+add_library(boot_grub_x86_64 OBJECT boot/boot.S)
 set_property(TARGET boot_grub_x86_64 PROPERTY ASM_NASM_FLAGS "-f elf64")
 
 # 添加端口读写库
