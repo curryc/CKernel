@@ -40,7 +40,6 @@ struct atexit_func_entry_t {
     void* obj_ptr;
     void* dso_handle;
 };
-
 void cpp_init(void) {
     ctor_t* f;
     for (f = __init_array_start; f < __init_array_end; f++) {
@@ -77,9 +76,21 @@ void __gxx_personality_v0() {
     return;
 }
 
+void operator delete(void* ptr) noexcept {
+    // 在内核中我们不实现实际的内存释放
+    return;
+}
+
 void operator delete(void*, unsigned long) {
     // 在内核中我们不实现实际的内存释放
     return;
+}
+void operator delete[](void* ptr) noexcept {
+    operator delete(ptr);
+}
+
+void operator delete[](void* ptr, unsigned long) noexcept {
+    operator delete(ptr);
 }
 
 /**

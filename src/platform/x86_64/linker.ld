@@ -7,14 +7,16 @@ OUTPUT_FORMAT(
 )
 /* 指定输出架构 */
 OUTPUT_ARCH(i386:x86-64)
+/* 设置入口点 */
 ENTRY(_start)
-
 
 SECTIONS {
     /* 设置可执行文件起始地址 */
     PROVIDE (__executable_start = SEGMENT_START("text-segment", 1M));
     /* 设置当前地址计数器到文本段起始位置 */
     . = SEGMENT_START("text-segment", 1M);
+
+    .multiboot      : {*(.multiboot)}
     
     /* 引导代码段，包含引导过程所需的文本、数据和BSS段 */
     .boot           : { *(.text.boot) *(.data.boot) *(.bss.boot) }

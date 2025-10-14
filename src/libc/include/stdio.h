@@ -20,7 +20,6 @@ extern "C"
     int _vsnprintf(char *_buffer, const size_t _maxlen, const char *_format,
                    va_list _va);
 
-    // standerd output
 
     /**
      * @brief 输出格式化字符串

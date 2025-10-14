@@ -19,7 +19,7 @@ class ALLOCATOR
 private:
 protected:
     /// 分配器名称
-    const char *name;
+    const char *tag;
     /// 当前管理的内存区域地址
     uintptr_t allocator_start_addr;
     /// 当前管理的内存区域长度
@@ -32,13 +32,12 @@ protected:
 public:
     /**
      * @brief 构造内存分配器
-     * @param  _name           分配器名
+     * @param  _tag           分配器名
      * @param  _addr           要管理的内存开始地址
      * @param  _len            要管理的内存长度，单位以具体实现为准
      */
-    ALLOCATOR(const char *_name, uintptr_t _addr, size_t _len);
-
-    virtual ~ALLOCATOR(void) = 0;
+    ALLOCATOR(const char* _tag, unsigned long _addr, unsigned long _len);
+    virtual ~ALLOCATOR(void);
 
     /**
      * @brief 分配 _len 页
@@ -75,4 +74,5 @@ public:
      */
     virtual size_t get_free_count(void) const = 0;
 };
+
 #endif

@@ -306,4 +306,10 @@ public:
      */
     static bool get_memory(const iter_data_t* _iter_data, void* _data);
 };
+
+
+namespace BOOT_INFO {
+/// 魔数
+extern "C" uint32_t multiboot2_magic;
+};     // namespace BOOT_INFO
  #endif

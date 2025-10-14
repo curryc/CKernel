@@ -19,9 +19,6 @@ namespace BOOT_INFO
     /// 声明，定义在具体的实现中
     /// 是否已经初始化过
     extern bool inited;
-    // 魔数
-    uint32_t multiboot2_magic;
-    
     /// 地址
     extern "C" uintptr_t boot_info_addr;
     /// 长度
@@ -53,5 +50,5 @@ namespace BOOT_INFO
      * @return resource_t       plic 资源信息
      */
     extern resource_t get_plic(void);
-}
+}; // namespace BOOT_INFO
 #endif

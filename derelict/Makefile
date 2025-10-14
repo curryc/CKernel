@@ -80,7 +80,7 @@ $(ISO): $(KERNEL_GRUB_ELF)
 	@echo 'set timeout=5' > build/grub/isodir/boot/grub/grub.cfg
 	@echo 'set default=0' >> build/grub/isodir/boot/grub/grub.cfg
 	@echo '' >> build/grub/isodir/boot/grub/grub.cfg
-	@echo 'menuentry "My Kernel" {' >> build/grub/isodir/boot/grub/grub.cfg
+	@echo 'menuentry "CKernel" {' >> build/grub/isodir/boot/grub/grub.cfg
 	@echo '  multiboot2 /boot/kernel.bin' >> build/grub/isodir/boot/grub/grub.cfg
 	@echo '  boot' >> build/grub/isodir/boot/grub/grub.cfg
 	@echo '}' >> build/grub/isodir/boot/grub/grub.cfg

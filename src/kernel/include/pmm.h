@@ -58,7 +58,6 @@ public:
      * @brief 初始化
      * @return true            成功
      * @return false           失败
-     * @todo 移动到构造函数去
      */
     bool        init(void);
 

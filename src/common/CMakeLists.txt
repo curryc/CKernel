@@ -1,6 +1,6 @@
 project(common)
 
-aux_source_directory(${common_SOURCE_DIR}/src cxx_src)
+aux_source_directory(./src cxx_src)
 
 add_library(common STATIC ${cxx_src})
 
@@ -14,7 +14,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 )
 
 # 拒绝外部C++库
-target_compile_options(libcxx PRIVATE
+target_compile_options(common PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:
         -std=c++11
         -ffreestanding

@@ -1,8 +1,8 @@
 PROJECT(libc C)
 
 # 查找各个子目录下的源文件
-aux_source_directory(${libc_SOURCE_DIR}/src/stdio stdio_src)
-aux_source_directory(${libc_SOURCE_DIR}/src/string string_src)
+aux_source_directory(./src/stdio stdio_src)
+aux_source_directory(./src/string string_src)
 
 # 合并所有源文件
 set(libc_src ${stdio_src} ${string_src})
@@ -14,7 +14,7 @@ if(libc_src)
     
     # 设置包含目录
     target_include_directories(${PROJECT_NAME} PUBLIC 
-        ${libc_SOURCE_DIR}/include
+        ./include
         ${CMAKE_CURRENT_SOURCE_DIR}/../common/include
     )
     
@@ -32,7 +32,7 @@ else()
 endif()
 
 # 拒绝外部库
-target_compile_options(kernel_grub PRIVATE
+target_compile_options(libc PRIVATE
     $<$<COMPILE_LANGUAGE:C>:
         -std=c11
         -ffreestanding

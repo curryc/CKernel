@@ -45,7 +45,7 @@ if(TARGET boot_grub_x86_64)
         COMMAND ${CMAKE_COMMAND} -E echo "set timeout=5" > ${ISO_DIR}/boot/grub/grub.cfg
         COMMAND ${CMAKE_COMMAND} -E echo "set default=0" >> ${ISO_DIR}/boot/grub/grub.cfg
         COMMAND ${CMAKE_COMMAND} -E echo "" >> ${ISO_DIR}/boot/grub/grub.cfg
-        COMMAND ${CMAKE_COMMAND} -E echo "menuentry \"My Kernel\" {" >> ${ISO_DIR}/boot/grub/grub.cfg
+        COMMAND ${CMAKE_COMMAND} -E echo "menuentry \"CKernel\" {" >> ${ISO_DIR}/boot/grub/grub.cfg
         COMMAND ${CMAKE_COMMAND} -E echo "  multiboot2 /boot/kernel.bin" >> ${ISO_DIR}/boot/grub/grub.cfg
         COMMAND ${CMAKE_COMMAND} -E echo "  boot" >> ${ISO_DIR}/boot/grub/grub.cfg
         COMMAND ${CMAKE_COMMAND} -E echo "}" >> ${ISO_DIR}/boot/grub/grub.cfg

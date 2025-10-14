@@ -102,6 +102,11 @@ void IO::put_char(char c) {
     return;
 }
 
+int32_t IO::write_string(const char* s) {
+    io.write_string(s);
+    return 0;
+}
+
 #include "cstdio"
 
 // 输出缓冲

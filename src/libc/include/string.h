@@ -15,6 +15,8 @@ extern "C" {
 #include "stddef.h"
 #include "stdint.h"
 
+
+
 extern void*  memcpy(void* _dest, const void* _src, size_t _len);
 extern void*  memset(void* _dest, int val, size_t _len);
 extern int    memcmp(const void* _str1, const void* _str2, size_t _count);

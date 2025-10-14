@@ -6,39 +6,44 @@
  */
 
 #ifndef CKERNEL_RESOURCE_H
-#define KERNEL_RESOURCE_H 
+#define CKERNEL_RESOURCE_H
 
 #include "cstdint"
 #include "cassert"
 #include "iostream"
 
-struct resource_t {
+struct resource_t
+{
     /// 资源类型
-    enum : uint8_t {
+    enum : uint8_t
+    {
         /// 内存
-        MEM     = 1 << 0,
+        MEM = 1 << 0,
         /// 中断号
         INTR_NO = 1 << 1,
     };
 
     uint8_t type;
     /// 资源名称
-    char*   name;
+    char *name;
 
     /// 内存信息
-    struct {
+    struct
+    {
         uintptr_t addr;
-        size_t    len;
+        size_t len;
     } mem;
 
     /// 中断号
     uint8_t intr_no;
 
-    resource_t(void) : type(0), name(nullptr) {
+    resource_t(void)
+    {
+        type = 0;
+        name = nullptr;
         mem.addr = 0;
-        mem.len  = 0;
-        intr_no  = 0;
-        return;
+        mem.len = 0;
+        intr_no = 0;
     }
 
     /**
@@ -47,16 +52,19 @@ struct resource_t {
      * @param  _res            要输出的 resource_t
      * @return std::ostream&   输出流
      */
-    friend std::ostream& operator<<(std::ostream& _os, const resource_t& _res) {
-        printf("%s: ", _res.name);
-        if (_res.type & MEM) {
-            printf("MEM(0x%p, 0x%p)", _res.mem.addr, _res.mem.len);
-        }
-        if (_res.type & INTR_NO) {
-            printf(", INTR_NO(0x%p)", _res.intr_no);
-        }
-        return _os;
-    }
+    // friend std::ostream &operator<<(std::ostream &_os, const resource_t &_res)
+    // {
+    //     _os << _res.name << ": ";
+    //     if (_res.type & MEM)
+    //     {
+    //         _os << "MEM(0x" << std::hex << _res.mem.addr << ", 0x" << _res.mem.len << std::dec << ")";
+    //     }
+    //     if (_res.type & INTR_NO)
+    //     {
+    //         _os << ", INTR_NO(0x" << std::hex << (int)_res.intr_no << std::dec << ")";
+    //     }
+    //     return _os;
+    // }
 };
 
 #endif
