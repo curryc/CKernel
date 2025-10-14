@@ -32,6 +32,10 @@ PMM& PMM::get_instance(void) {
 bool PMM::init(void) {
     // 获取物理内存信息
     resource_t mem_info = BOOT_INFO::get_memory();
+    while (1)
+    {
+        __asm__ volatile("hlt");
+    }
     // 设置物理地址的起点与长度
     start               = mem_info.mem.addr;
     length              = mem_info.mem.len;

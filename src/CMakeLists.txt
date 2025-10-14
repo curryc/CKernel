@@ -59,7 +59,10 @@ if(TARGET boot_grub_x86_64)
 
     # GRUB运行目标
     add_custom_target(run-grub
-        COMMAND qemu-system-x86_64 -cdrom ${ISO_FILE} -m 128M -serial stdio
+        COMMAND qemu-system-x86_64 -cdrom ${ISO_FILE} 
+        -m 128M 
+        -serial stdio 
+        -gdb tcp::1234 
         DEPENDS grub_iso
         USES_TERMINAL
     )

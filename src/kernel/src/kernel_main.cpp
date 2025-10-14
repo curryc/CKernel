@@ -8,6 +8,7 @@
 #include "io.h"
 #include "iostream"
 #include "vgaprint.h"
+#include "boot_info.h"
 
 
 // 声明内核主函数
@@ -15,14 +16,17 @@ extern "C" void kernel_main();
 
 void test()
 {
-    IO::get_instance().put_char('h');
+    // 初始化
+    BOOT_INFO::init();
+    // 物理内存初始化
+    PMM::get_instance().init();
 }
 
 void test_vga()
 {
     vga_init();
     vga_setcolor(VGA_WHITE);
-    vga_printf("Hello from CKERNEL!\n");
+    vga_printf("Hello from CKERNEL!!\n");
     return;
 }
 
@@ -32,8 +36,7 @@ void test_vga()
 void kernel_main()
 {
     test_vga();
-    PMM::get_instance().init();
-    // test();
+    test();
     // 无限循环
     while (1)
     {

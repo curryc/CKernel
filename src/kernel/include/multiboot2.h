@@ -11,6 +11,7 @@
  #include "cstdint"
  #include "cstdbool"
  #include "boot_info.h"
+ #include "vgaprint"
 
  class MULTIBOOT2 {
 private:

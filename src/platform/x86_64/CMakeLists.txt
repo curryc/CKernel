@@ -7,7 +7,9 @@ enable_language(ASM)
 add_library(boot_grub_x86_64 OBJECT boot/boot.S)
 
 # 添加端口读写库
-add_library(port OBJECT port/port.cpp)
+set(CMAKE_CXX_STANDARD 11)
+set_source_files_properties(port/port.cpp PROPERTIES LANGUAGE CXX)
+add_library(port STATIC port/port.cpp)
 target_include_directories(port PUBLIC port/include)
 
 # 创建一个接口库，将所有x86_64平台组件组合在一起

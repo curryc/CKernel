@@ -18,28 +18,62 @@ MULTIBOOT2 &MULTIBOOT2::get_instance(void)
 bool MULTIBOOT2::multiboot2_init(void)
 {
     uintptr_t addr = BOOT_INFO::boot_info_addr;
+    vga_printf("multiboot2_init:Boot info address: 0x%x\n", addr);
+    vga_printf("multiboot2_init:Magic number: 0x%x\n", BOOT_INFO::multiboot2_magic);
+    
     // 判断魔数是否正确
-    assert(BOOT_INFO::multiboot2_magic == MULTIBOOT2_BOOTLOADER_MAGIC);
-    assert((reinterpret_cast<uintptr_t>(addr) & 7) == 0);
-    // addr+0 保存大小
+    if (BOOT_INFO::multiboot2_magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
+        vga_printf("multiboot2_init:Invalid magic number!\n");
+        return false;
+    }
+    
+    if ((reinterpret_cast<uintptr_t>(addr) & 7) != 0) {
+        vga_printf("multiboot2_init:Address not aligned!\n");
+        return false;
+    }
+    
     BOOT_INFO::boot_info_size = *(uint32_t *)addr;
+    vga_printf("multiboot2_init:Boot info size: %d\n", BOOT_INFO::boot_info_size);
     return true;
 }
 
 void MULTIBOOT2::multiboot2_iter(bool (*_fun)(const iter_data_t *, void *), void *_data)
 {
+    if (!BOOT_INFO::boot_info_addr) {
+        return;
+    }
+    
     uintptr_t addr = BOOT_INFO::boot_info_addr;
-    // 下一字节开始为 tag 信息
+    assert((addr & 7) == 0); // 确保8字节对齐
+    
+    // 验证最小大小
+    if (BOOT_INFO::boot_info_size < sizeof(uint32_t) * 2) {
+        return;
+    }
+    
     iter_data_t *tag = (iter_data_t *)(addr + 8);
-    for (; tag->type != MULTIBOOT_TAG_TYPE_END;
-         tag = (iter_data_t *)((uint8_t *)tag + common::ALIGN(tag->size, 8)))
-    {
-        if (_fun(tag, _data) == true)
-        {
+    
+    // 添加边界检查
+    uintptr_t end_addr = addr + BOOT_INFO::boot_info_size;
+    
+    while ((uintptr_t)tag < end_addr && tag->type != MULTIBOOT_TAG_TYPE_END) {
+        // 验证当前tag在有效范围内
+        if ((uintptr_t)tag + sizeof(iter_data_t) > end_addr || 
+            (uintptr_t)tag + tag->size > end_addr) {
+            break;
+        }
+        
+        if (_fun(tag, _data) == true) {
             return;
         }
+        
+        tag = (iter_data_t *)((uint8_t *)tag + common::ALIGN(tag->size, 8));
+        
+        // 确保指针前进后仍在有效范围内
+        if ((uintptr_t)tag >= end_addr) {
+            break;
+        }
     }
-    return;
 }
 
 bool MULTIBOOT2::get_memory(const iter_data_t *_iter_data, void *_data)
@@ -88,25 +122,33 @@ namespace BOOT_INFO
         if (inited == false)
         {
             inited = true;
-            info("BOOT_INFO init.\n");
+            vga_printf("boot_info_init:BOOT_INFO init.\n");
         }
         else
         {
-            info("BOOT_INFO reinit.\n");
+            vga_printf("boot_info_init:BOOT_INFO reinit.\n");
         }
         return res;
     }
 
     resource_t get_memory(void)
     {
-    while (1)
-    {
-        __asm__ volatile("hlt");
-    }
+        if (!BOOT_INFO::inited) {
+            vga_printf("BOOT_INFO not inited.\n");
+            resource_t empty_resource;
+            return empty_resource;
+        }
         resource_t resource;
-
+                while (1)
+        {
+            __asm__ volatile("hlt");
+        }
         MULTIBOOT2::get_instance().multiboot2_iter(MULTIBOOT2::get_memory,
                                                    &resource);
+        while (1)
+        {
+            __asm__ volatile("hlt");
+        }
         return resource;
     }
 }; // namespace BOOT_INFO

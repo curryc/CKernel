@@ -4,53 +4,79 @@
  * @author curryc (chencurry5@gmail.com)
  * @date 2025-09-29
  */
-#pragma once
-#include <cstdint>
-#include <cstddef>
 
-namespace port {
+#ifndef CKERNEL_PORT_H
+#define CKERNEL_PORT_H
 
-/**
- * @brief inb 8个字节的端口读
- * @param  __port           
- * @return uint8_t 
- */
-uint8_t inb(uint16_t __port);
+typedef unsigned char uint8_t;
+typedef unsigned short int uint16_t;
+typedef unsigned int uint32_t;
 
-/**
- * @brief outb 8个字节的端口写
- * @param  __port
- * @param  __val
- */
-void outb(uint16_t __port, uint8_t __val);
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
- * @brief inw 16个字字节的端口读
- * @param  __port
- * @return uint16_t 
+ * @brief  读一个字节
+ * @param  _port           要读的端口
+ * @return uint8_t         读取到的数据
+ * @warning 不处理执行失败的问题
  */
-uint16_t inw(uint16_t __port) ;
+uint8_t port_inb(const uint32_t _port);
 
 /**
- * @brief outw 16个字字节的端口写
- * @param  __port
- * @param  __val
+ * @brief  读一个字
+ * @param  _port           要读的端口
+ * @return uint16_t        读取到的数据
+ * @warning 不处理执行失败的问题
  */
-void outw(uint16_t __port, uint16_t __val);
+uint16_t port_inw(const uint32_t _port);
 
 /**
- * @brief inl 32个字字节的端口读
- * @param  __port
- * @return uint32_t 
+ * @brief  读一个双字
+ * @param  _port           要读的端口
+ * @return uint32_t        读取到的数据
+ * @warning 不处理执行失败的问题
  */
-uint32_t ind(uint16_t __port);
+uint32_t port_ind(const uint32_t _port);
 
 /**
- * @brief outl 32个字字字节的端口写
- * @param  __port
- * @param  __val
+ * @brief  写一个字节
+ * @param  _port           要写的端口
+ * @param  _data           要写的数据
+ * @warning 不处理执行失败的问题
  */
-void outd(uint16_t __port, uint32_t __val);
+void port_outb(const uint32_t _port, const uint8_t _data);
 
-} // namespace port
+/**
+ * @brief  写一个字
+ * @param  _port           要写的端口
+ * @param  _data           要写的数据
+ * @warning 不处理执行失败的问题
+ */
+void port_outw(const uint32_t _port, const uint16_t _data);
+
+/**
+ * @brief  写一个双字
+ * @param  _port           要写的端口
+ * @param  _data           要写的数据
+ * @warning 不处理执行失败的问题
+ */
+void port_outd(const uint32_t _port, const uint32_t _data);
+
+#ifdef __cplusplus
+} // extern "C"
+
+// 为C++提供namespace封装
+namespace port
+{
+    inline uint8_t inb(const uint32_t _port) { return port_inb(_port); }
+    inline uint16_t inw(const uint32_t _port) { return port_inw(_port); }
+    inline uint32_t ind(const uint32_t _port) { return port_ind(_port); }
+    inline void outb(const uint32_t _port, const uint8_t _data) { port_outb(_port, _data); }
+    inline void outw(const uint32_t _port, const uint16_t _data) { port_outw(_port, _data); }
+    inline void outd(const uint32_t _port, const uint32_t _data) { port_outd(_port, _data); }
+}
+#endif
+
+#endif

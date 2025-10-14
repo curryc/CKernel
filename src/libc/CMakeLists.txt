@@ -7,6 +7,7 @@ aux_source_directory(./src/string string_src)
 # 合并所有源文件
 set(libc_src ${stdio_src} ${string_src})
 
+
 # 创建库
 if(libc_src)
     # 如果有源文件则创建OBJECT库
@@ -18,12 +19,18 @@ if(libc_src)
         ${CMAKE_CURRENT_SOURCE_DIR}/../common/include
     )
     
+    target_link_libraries(${PROJECT_NAME}  PRIVATE 
+        platform
+    )
     # 设置位置无关代码属性
     set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE OFF)
 else()
     # 如果没有源文件，则创建一个空的INTERFACE库
     add_library(${PROJECT_NAME} INTERFACE)
     
+    target_link_libraries(${PROJECT_NAME}  PRIVATE 
+        platform
+    )
     # 为INTERFACE库设置包含目录
     target_include_directories(${PROJECT_NAME} PUBLIC 
         ${libc_SOURCE_DIR}/include

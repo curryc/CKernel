@@ -25,7 +25,7 @@ void vga_init(void);                    /* 第一次调用清屏 */
 void vga_setcolor(enum vga_color fg);   /* 默认 VGA_WHITE */
 void vga_puts(const char *s);           /* 原始字符串 */
 void vga_printf(const char *fmt, ...);  /* 格式化打印 */
-
+void generic_trap(struct trapframe *tf);
 
 #ifdef __cplusplus
 }
