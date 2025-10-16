@@ -16,7 +16,8 @@
  */
 namespace BOOT_INFO
 {
-    /// 声明，定义在具体的实现中
+    /// 仅仅是声明，定义在具体的实现中
+
     /// 是否已经初始化过
     extern bool inited;
     /// 地址
@@ -25,6 +26,8 @@ namespace BOOT_INFO
     extern size_t boot_info_size;
     /// 保存 sbi 传递的启动核
     extern "C" size_t dtb_init_hart;
+    /// 魔数
+    extern "C" uint32_t multiboot2_magic;
 
     /**
      * @brief 初始化，定义在具体实现中
