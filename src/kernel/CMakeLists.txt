@@ -10,10 +10,10 @@ add_library(kernel_grub STATIC ${cxx_src})
 
 # 链接
 target_link_libraries(kernel_grub PRIVATE 
+    port
     libc 
     libcxx
     common
-    platform
 )
 
 # 设置C++编译选项
@@ -36,6 +36,7 @@ target_compile_options(kernel_grub PRIVATE
         -nostdlib -nostartfiles -fno-pie -mno-red-zone
         -mcmodel=kernel -m64
         -fno-exceptions -fno-rtti
+        -fvisibility=default
     >
 )
 

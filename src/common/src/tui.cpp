@@ -66,13 +66,13 @@ void TUI::set_pos(const pos_t _pos) {
     this->pos            = _pos;
     // 光标的设置，见参考资料
     // 告诉 TUI 我们要设置光标的高字节
-    port::outb(TUI_ADDR, TUI_CURSOR_H);
+    PORT::outb(TUI_ADDR, TUI_CURSOR_H);
     // 发送高 8 位
-    port::outb(TUI_DATA, index >> 8);
+    PORT::outb(TUI_DATA, index >> 8);
     // 告诉 TUI 我们要设置光标的低字节
-    port::outb(TUI_ADDR, TUI_CURSOR_L);
+    PORT::outb(TUI_ADDR, TUI_CURSOR_L);
     // 发送低 8 位
-    port::outb(TUI_DATA, index);
+    PORT::outb(TUI_DATA, index);
     return;
 }
 
@@ -144,10 +144,10 @@ void TUI::scroll(void) {
 
 pos_t TUI::get_pos(void) const {
     // 通过读写相应寄存器获取光标位置
-    port::outb(TUI_ADDR, TUI_CURSOR_H);
-    size_t cursor_pos_h = port::inb(TUI_DATA);
-    port::outb(TUI_ADDR, TUI_CURSOR_L);
-    size_t cursor_pos_l = port::inb(TUI_DATA);
+    PORT::outb(TUI_ADDR, TUI_CURSOR_H);
+    size_t cursor_pos_h = PORT::inb(TUI_DATA);
+    PORT::outb(TUI_ADDR, TUI_CURSOR_L);
+    size_t cursor_pos_l = PORT::inb(TUI_DATA);
     // 返回光标位置
     return pos_t(cursor_pos_l, cursor_pos_h);
 }

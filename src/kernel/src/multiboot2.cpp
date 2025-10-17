@@ -19,12 +19,7 @@ bool MULTIBOOT2::multiboot2_init(void)
 {
     vga_printf("multiboot2_init:Magic number: 0x%lx\n", BOOT_INFO::multiboot2_magic);
     uintptr_t addr = BOOT_INFO::boot_info_addr;
-    vga_printf("multiboot2_init:Boot info address: 0x%lx\n", addr);
-    vga_printf("multiboot2_init:Boot info address: 0x%lx\n", addr);
-    vga_printf("multiboot2_init:Boot info address: 0x%lx\n", addr);
-    vga_printf("multiboot2_init:Boot info address: 0x%lx\n", addr);
-    vga_printf("multiboot2_init:Boot info address: 0x%lx\n", addr);
-    vga_printf("multiboot2_init:Boot info address: 0x%lx\n", addr);
+    vga_printf("multiboot2_init:Boot info addr: 0x%lx\n", addr);
     
     // 判断魔数是否正确
     if (BOOT_INFO::multiboot2_magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
@@ -39,7 +34,7 @@ bool MULTIBOOT2::multiboot2_init(void)
     
     BOOT_INFO::boot_info_size = *(uint32_t *)addr;
     vga_printf("multiboot2_init:Boot info size: %d\n", BOOT_INFO::boot_info_size);
-    vga_printf("multiboot2_init:end addr: 0x%lx\n", BOOT_INFO::boot_info_addr + BOOT_INFO::boot_info_size);
+    vga_printf("multiboot2_init:Boot info end : 0x%lx\n", BOOT_INFO::boot_info_addr + BOOT_INFO::boot_info_size);
     return true;
 }
 
@@ -83,34 +78,37 @@ bool MULTIBOOT2::get_memory(const iter_data_t *_iter_data, void *_data)
     multiboot_tag_mmap_t *mmap_tag = (multiboot_tag_mmap_t *)_iter_data;
 
 
-    uint32_t size = mmap_tag->size;
-    uint32_t *end_addr = (uint32_t *)mmap_tag + size;
+    uint32_t tag_size = mmap_tag->size;
+    uint8_t *tag_end = (uint8_t*)mmap_tag + tag_size;
     uint32_t entry_size = mmap_tag->entry_size;
 
-    vga_printf("Tag size: %d, Entry size: %d\n", size, entry_size);
+    vga_printf("Tag size: %d, Entry size: %d\n", tag_size, entry_size);
 
-        while (1)
-        {
-            __asm__ volatile("hlt");
-        }
-    MULTIBOOT2::multiboot_mmap_entry_t *mmap = ((MULTIBOOT2::multiboot_tag_mmap_t *)_iter_data)->entries;
-    for (; (uint32_t *)mmap < end_addr;
-         mmap = (multiboot_mmap_entry_t *)((uint8_t *)mmap + size))
-    {
-        while (1)
-        {
-            __asm__ volatile("hlt");
-        }
-        // 如果是可用内存或地址小于 1M
-        // 这里将 0~1M 的空间全部算为可用，在 c++ 库可用后进行优化
-        if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE || mmap->addr < 1 * common::MB)
-        {
-            // 长度+
+
+    // 指向第一个内存映射项
+    MULTIBOOT2::multiboot_mmap_entry_t *mmap = mmap_tag->entries;
+    
+    // 遍历所有内存映射项
+    while ((uint8_t*)mmap < tag_end) {
+        vga_printf("Base addr: 0x%lx, Length: 0x%lx, Type: %u\n", 
+                   mmap->addr, mmap->len, mmap->type);
+
+        // 如果是可用内存
+        if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE) {
+            // 累加可用内存大小
             resource->mem.len += mmap->len;
+            vga_printf("  -> Added to available memory\n");
         }
+        // 移动到下一个内存映射项
+        mmap = (multiboot_mmap_entry_t*)((uint8_t*)mmap + entry_size);
     }
 
+
     vga_printf("Total available memory: %ubytes\n", resource->mem.len);
+        while (1)
+        {
+            __asm__ volatile("hlt");
+        }
     return true;
 }
 

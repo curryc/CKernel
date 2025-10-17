@@ -18,21 +18,45 @@ set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS} -f elf64")
 include_directories(include)
 
 # 添加子目录
-add_subdirectory(kernel)
 add_subdirectory(platform)
-add_subdirectory(selfboot)
+add_subdirectory(kernel)
 add_subdirectory(libc)
 add_subdirectory(libcxx)
 add_subdirectory(common)
+add_subdirectory(selfboot)
 
 # 检查x86_64引导目标是否存在
 if(TARGET boot_grub_x86_64)
     # GRUB相关目标
     # 链接成 ELF
-    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/grub/kernel.elf
-        COMMAND ${CMAKE_CXX_COMPILER} -T${CMAKE_CURRENT_SOURCE_DIR}/platform/x86_64/linker.ld -no-pie -nostdlib -mcmodel=large -m64 -fno-exceptions -fno-rtti -fno-pic $<TARGET_OBJECTS:boot_grub_x86_64> $<TARGET_OBJECTS:port> $<TARGET_FILE:kernel_grub> $<TARGET_FILE:common> $<TARGET_FILE:libc> $<TARGET_FILE:libcxx> -lgcc -o ${CMAKE_BINARY_DIR}/grub/kernel.elf
-        DEPENDS kernel_grub boot_grub_x86_64 common libc libcxx port
-        COMMENT "Linking kernel.elf (GRUB)"
+    # 先让 CMake 拿到 libgcc 目录
+    execute_process(COMMAND ${CMAKE_CXX_COMPILER}
+                            -m64 -print-libgcc-file-name
+                    OUTPUT_VARIABLE LIBGCC_FULLPATH
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+    get_filename_component(LIBGCC_DIR ${LIBGCC_FULLPATH} DIRECTORY)
+
+    add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/grub/kernel.elf
+        COMMAND ld
+            -T ${CMAKE_CURRENT_SOURCE_DIR}/platform/x86_64/linker.ld
+            -m elf_x86_64
+            -nostdlib
+            -L ${LIBGCC_DIR}
+            $<TARGET_FILE:boot_grub_x86_64>
+            $<TARGET_FILE:port>
+            $<TARGET_FILE:kernel_grub>
+            $<TARGET_FILE:common>
+            $<TARGET_FILE:libc>
+            $<TARGET_FILE:libcxx>
+            -lgcc
+            -o ${CMAKE_BINARY_DIR}/grub/kernel.elf
+        DEPENDS boot_grub_x86_64 port kernel_grub common libc libcxx
+        VERBATIM
+        COMMAND_EXPAND_LISTS
+    )
+    add_custom_target(kernel_elf_target
+        DEPENDS ${CMAKE_BINARY_DIR}/grub/kernel.elf
     )
 
     # 制作 ISO
@@ -50,7 +74,7 @@ if(TARGET boot_grub_x86_64)
         COMMAND ${CMAKE_COMMAND} -E echo "  boot" >> ${ISO_DIR}/boot/grub/grub.cfg
         COMMAND ${CMAKE_COMMAND} -E echo "}" >> ${ISO_DIR}/boot/grub/grub.cfg
         COMMAND grub-mkrescue -o ${ISO_FILE} ${ISO_DIR} || grub2-mkrescue -o ${ISO_FILE} ${ISO_DIR} || (echo "ERROR: Neither grub-mkrescue nor grub2-mkrescue found!" && echo "Please install grub-pc-bin or grub2-tools package." && exit 1)
-        DEPENDS ${CMAKE_BINARY_DIR}/grub/kernel.elf
+        DEPENDS kernel_elf_target
         COMMENT "Creating bootable ISO (GRUB)"
     )
 

@@ -8,6 +8,7 @@
 #include "io.h"
 #include "iostream"
 #include "vgaprint.h"
+#include "interrupts.h"   
 #include "boot_info.h"
 
 
@@ -16,6 +17,13 @@ extern "C" void kernel_main();
 
 void test()
 {
+    // 初始化中断系统
+    if (!INTERRUPTS::init()) {
+        vga_printf("Failed to initialize interrupts system!\n");
+        while (1) {
+            __asm__ volatile("hlt");
+        }
+    }
     // 初始化
     BOOT_INFO::init();
     // 物理内存初始化
