@@ -4,6 +4,7 @@
 #include "cstring"
 #include "common.h"
 #include "firstfit.h"
+#include "vgaprint.h"
 
 void PMM::move_boot_info(void) {
     // 计算 multiboot2 信息需要多少页
@@ -32,10 +33,15 @@ PMM& PMM::get_instance(void) {
 bool PMM::init(void) {
     // 获取物理内存信息
     resource_t mem_info = BOOT_INFO::get_memory();
-    while (1)
-    {
-        __asm__ volatile("hlt");
+    
+    // 验证获取的内存信息
+    if (mem_info.mem.len == 0) {
+        vga_printf("PMM init: No memory available!\n");
+        return false;
     }
+    
+    vga_printf("PMM init: Total available memory: %zu bytes\n", mem_info.mem.len);
+    
     // 设置物理地址的起点与长度
     start               = mem_info.mem.addr;
     length              = mem_info.mem.len;

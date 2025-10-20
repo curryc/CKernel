@@ -108,44 +108,19 @@ pd:
 pt:
     .skip 0x1000
 
-// 临时 GDT
+// 临时 GDT - 修正为正确的x86_64段描述符
 .align 16
 gdt64:
 null_desc:
-    .short 0xFFFF
-    .short 0
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 0
+    .quad 0x0000000000000000    # Null descriptor
 code_desc:
-    .short 0
-    .short 0
-    .byte 0
-    .byte 0x9A
-    .byte 0x20
-    .byte 0
+    .quad 0x00AF9A000000FFFF    # Kernel code segment (64-bit, executable, readable)
 data_desc:
-    .short 0
-    .short 0
-    .byte 0
-    .byte 0x92
-    .byte 0
-    .byte 0
+    .quad 0x00AF92000000FFFF    # Kernel data segment (writable)
 user_code_desc:
-    .short 0
-    .short 0
-    .byte 0
-    .byte 0xFA
-    .byte 0x20
-    .byte 0
+    .quad 0x00AFFA000000FFFF    # User code segment (64-bit, executable, readable, DPL=3)
 user_data_desc:
-    .short 0
-    .short 0
-    .byte 0
-    .byte 0xF2
-    .byte 0
-    .byte 0
+    .quad 0x00AFF2000000FFFF    # User data segment (writable, DPL=3)
 gdt64_pointer:
     .short gdt64_pointer-gdt64-1
     .long gdt64

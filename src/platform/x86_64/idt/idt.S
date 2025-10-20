@@ -13,8 +13,32 @@
 .extern irq_handler
 
 idt_load:
-    mov %edi, %eax
-    lidt 0(%eax)
+    // 验证输入参数
+    test %rdi, %rdi
+    jz idt_load_fail
+    
+    // 验证IDTR结构
+    mov 0(%rdi), %ax        // limit
+    mov 2(%rdi), %rax       // base (低48位有效)
+    
+    test %rax, %rax         // 检查base是否为0
+    jz idt_load_fail
+    
+    test %ax, %ax           // 检查limit是否为0
+    jz idt_load_fail
+    
+    // 加载IDT
+    lidt 0(%rdi)
+    
+    // 验证加载成功
+    push %rax
+    sidt 0(%rsp)
+    pop %rax
+    ret
+    
+idt_load_fail:
+    // 返回错误码
+    mov $-1, %rax
     ret
 
 

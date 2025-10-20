@@ -90,8 +90,6 @@ extern "C" void irq13(void);
 extern "C" void irq14(void);
 /// IDE1 传输控制使用
 extern "C" void irq15(void);
-/// 声明加载 IDTR 的函数
-extern "C" void idt_load(uint64_t);
 
 // 中断上下文结构体，与汇编代码中保存的寄存器一致
 struct intr_context_t {
@@ -124,16 +122,16 @@ struct intr_context_t {
 namespace INTERRUPTS
 {
 
-    // IDT条目结构
+    // IDT条目结构 (符合x86_64规范)
     struct idt_entry_t
     {
-        uint16_t offset_low;
-        uint16_t selector;
-        uint8_t ist;
-        uint8_t type_attr;
-        uint16_t offset_mid;
-        uint32_t offset_high;
-        uint32_t reserved;
+        uint16_t offset_low;      // 偏移低16位
+        uint16_t selector;        // 代码段选择子
+        uint8_t ist;              // IST (Interrupt Stack Table)
+        uint8_t type_attr;        // 类型和属性
+        uint16_t offset_mid;      // 偏移中16位
+        uint32_t offset_high;     // 偏移高32位
+        uint32_t reserved;        // 保留必须为0
     } __attribute__((packed));
 
     // IDTR结构
@@ -202,8 +200,9 @@ extern "C" {
     /**
      * @brief 加载IDT
      * @param idtr IDT寄存器地址
+     * @return int64_t 成功返回0，失败返回-1
      */
-    void idt_load(uint64_t idtr);
+    int64_t idt_load(uint64_t idtr);
     
     /**
      * @brief ISR处理函数（由汇编调用）

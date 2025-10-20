@@ -10,7 +10,7 @@ add_library(kernel_grub STATIC ${cxx_src})
 
 # 链接
 target_link_libraries(kernel_grub PRIVATE 
-    port
+    platform
     libc 
     libcxx
     common

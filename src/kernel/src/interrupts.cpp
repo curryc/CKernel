@@ -33,79 +33,104 @@ namespace INTERRUPTS
     // PIC命令
     constexpr const uint8_t PIC_EOI = 0x20;
 
-    bool init()
-    {
+bool init()
+{
+        vga_printf("Starting IDT initialization...\n");
+        
+        // 首先验证IDT内存地址是否有效
+        uint64_t idt_addr = reinterpret_cast<uint64_t>(&idt[0]);
+        vga_printf("IDT address: 0x%lx\n", idt_addr);
+        
+        // 验证IDT内存对齐 - IDT必须16字节对齐
+        if (idt_addr & 0xF) {
+                vga_printf("IDT not properly aligned!\n");
+                return false;
+        }
+
+        // 验证IDT内存范围是否有效（简单检查）
+        if (idt_addr < 0x100000 || idt_addr > 0xFFFFFFFFFFFF) {
+                vga_printf("IDT address out of valid range!\n");
+                return false;
+        }
+
         // 初始化IDT
         idtr.limit = sizeof(idt_entry_t) * 256 - 1;
-        idtr.base = reinterpret_cast<uint64_t>(&idt[0]);
+        idtr.base = idt_addr;
+
+        vga_printf("IDTR: base=0x%lx, limit=0x%x\n", idtr.base, idtr.limit);
 
         // 清空IDT
         for (int i = 0; i < 256; i++)
         {
-            idt[i] = {};
+                idt[i] = {};
         }
 
         // 获取代码段选择子（假设为0x08）
         uint16_t code_selector = 0x08;
 
-        // 设置ISR条目（0-31为处理器异常）
-        for (int i = 0; i < 32; i++)
-        {
-            extern void *isr0; // 这些符号在汇编中定义
-            void **isrs = reinterpret_cast<void **>(&isr0);
+        // 只设置几个关键的ISR来处理基本异常
+        void (*critical_isr_handlers[])(void) = {
+                isr0, isr1, isr6, isr13, isr14  // 除零、调试、无效操作码、GP故障、页故障
+        };
+        
+        int critical_indices[] = {0, 1, 6, 13, 14};
 
-            uint64_t handler = reinterpret_cast<uint64_t>(isrs[i]);
-            idt[i].offset_low = handler & 0xFFFF;
-            idt[i].offset_mid = (handler >> 16) & 0xFFFF;
-            idt[i].offset_high = (handler >> 32) & 0xFFFFFFFF;
-            idt[i].selector = code_selector;
-            idt[i].ist = 0;
-            idt[i].type_attr = 0x8E; // 中断门，DPL=0
-            idt[i].reserved = 0;
+        // 设置关键ISR条目
+        for (int i = 0; i < 5; i++)
+        {
+                if (critical_isr_handlers[i] != nullptr)
+                {
+                        uint64_t handler = reinterpret_cast<uint64_t>(critical_isr_handlers[i]);
+                        
+                        // 验证处理程序地址有效性
+                        if (handler == 0 || handler > 0xFFFFFFFFFFFF) {
+                                vga_printf("Invalid ISR handler address for interrupt %d: 0x%lx\n", critical_indices[i], handler);
+                                return false;
+                        }
+                        
+                        int idx = critical_indices[i];
+                        idt[idx].offset_low = handler & 0xFFFF;
+                        idt[idx].offset_mid = (handler >> 16) & 0xFFFF;
+                        idt[idx].offset_high = (handler >> 32) & 0xFFFFFFFF;
+                        idt[idx].selector = code_selector;
+                        idt[idx].ist = 0;
+                        idt[idx].type_attr = 0x8E; // 中断门，DPL=0
+                        idt[idx].reserved = 0;
+                        
+                        vga_printf("Set ISR %d handler at 0x%lx\n", idx, handler);
+                }
         }
 
-        // 设置IRQ条目（32-47为IRQ0-15）
-        for (int i = 0; i < 16; i++)
-        {
-            extern void *irq0; // 这些符号在汇编中定义
-            void **irqs = reinterpret_cast<void **>(&irq0);
-
-            uint64_t handler = reinterpret_cast<uint64_t>(irqs[i]);
-            idt[32 + i].offset_low = handler & 0xFFFF;
-            idt[32 + i].offset_mid = (handler >> 16) & 0xFFFF;
-            idt[32 + i].offset_high = (handler >> 32) & 0xFFFFFFFF;
-            idt[32 + i].selector = code_selector;
-            idt[32 + i].ist = 0;
-            idt[32 + i].type_attr = 0x8E; // 中断门，DPL=0
-            idt[32 + i].reserved = 0;
+        // 在加载IDT之前验证IDTR
+        if (idtr.base == 0 || idtr.limit == 0) {
+                vga_printf("Invalid IDTR: base=0x%lx, limit=0x%x\n", idtr.base, idtr.limit);
+                return false;
         }
 
         // 加载IDT
-        idt_load(reinterpret_cast<uint64_t>(&idtr));
-        // 初始化PIC
-        // ICW1: 开始初始化PIC
-        PORT::outb(PIC1_COMMAND, 0x11);
-        PORT::outb(PIC2_COMMAND, 0x11);
+        vga_printf("Loading IDT...\n");
+        int64_t result = idt_load(reinterpret_cast<uint64_t>(&idtr));
+        if (result != 0) {
+                vga_printf("Failed to load IDT: error code %ld\n", result);
+                return false;
+        }
+        
+        vga_printf("IDT loaded successfully!\n");
 
-        // ICW2: 设置中断向量偏移
-        PORT::outb(PIC1_DATA, 0x20); // IRQ 0-7 映射到 0x20-0x27
-        PORT::outb(PIC2_DATA, 0x28); // IRQ 8-15 映射到 0x28-0x2F
-
-        // ICW3: 设置主从关系
-        PORT::outb(PIC1_DATA, 0x04); // IRQ2连接从片
-        PORT::outb(PIC2_DATA, 0x02); // 从片连接到主片的IRQ2
-
-        // ICW4: 设置8086模式
-        PORT::outb(PIC1_DATA, 0x01);
-        PORT::outb(PIC2_DATA, 0x01);
-
-        // OCW1: 屏蔽所有IRQ（可选，根据需要开启）
-        PORT::outb(PIC1_DATA, 0xFF); // 屏蔽所有IRQ
-        PORT::outb(PIC2_DATA, 0xFF); // 屏蔽所有IRQ
+        // 验证IDT是否被正确加载
+        uint64_t cs;
+        __asm__ volatile ("mov %%cs, %0" : "=r"(cs));
+        vga_printf("Current CS: 0x%lx\n", cs);
+        
+        // 检查特权级别
+        if ((cs & 0x3) != 0) {
+                vga_printf("Not in ring 0, cannot access I/O ports!\n");
+                return false;
+        }
 
         vga_printf("Interrupts system initialized.\n");
         return true;
-    }
+}
 
     void enable()
     {
@@ -137,9 +162,9 @@ namespace INTERRUPTS
     {
         if (irq_num >= 8)
         {
-            PORT::outb(PIC2_COMMAND, PIC_EOI);
+            port_outb(PIC2_COMMAND, PIC_EOI);
         }
-        PORT::outb(PIC1_COMMAND, PIC_EOI);
+        port_outb(PIC1_COMMAND, PIC_EOI);
     }
 
 } // namespace INTERRUPTS
@@ -147,9 +172,6 @@ namespace INTERRUPTS
 // C函数实现，供汇编代码调用
 extern "C"
 {
-
-
-    __attribute__((used, externally_visible))
     void isr_handler(uint8_t irq_num, intr_context_t *context, uint64_t err_code)
     {
         if (INTERRUPTS::isr_handlers[irq_num])

@@ -1,7 +1,5 @@
 #include "port.h"
 
-extern "C" {
-
 /* 8-bit */
 uint8_t port_inb(const uint32_t _port) {
     uint8_t __val;
@@ -46,5 +44,3 @@ void port_outd(const uint32_t _port, const uint32_t _data) {
                     :
                     : "a"(_data), "Nd"(_port));
 }
-
-} // extern "C"

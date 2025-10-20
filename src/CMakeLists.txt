@@ -43,15 +43,17 @@ if(TARGET boot_grub_x86_64)
             -m elf_x86_64
             -nostdlib
             -L ${LIBGCC_DIR}
+            --start-group
             $<TARGET_FILE:boot_grub_x86_64>
-            $<TARGET_FILE:port>
             $<TARGET_FILE:kernel_grub>
             $<TARGET_FILE:common>
             $<TARGET_FILE:libc>
             $<TARGET_FILE:libcxx>
+            $<TARGET_FILE:port>
+            --end-group
             -lgcc
             -o ${CMAKE_BINARY_DIR}/grub/kernel.elf
-        DEPENDS boot_grub_x86_64 port kernel_grub common libc libcxx
+        DEPENDS  kernel_grub common libc libcxx boot_grub_x86_64 port
         VERBATIM
         COMMAND_EXPAND_LISTS
     )

@@ -17,17 +17,37 @@ extern "C" void kernel_main();
 
 void test()
 {
-    // 初始化中断系统
-    if (!INTERRUPTS::init()) {
-        vga_printf("Failed to initialize interrupts system!\n");
+    vga_printf("test: Starting test function...\n");
+
+    // 初始化
+    vga_printf("Initializing boot info...\n");
+    if (!BOOT_INFO::init()) {
+        vga_printf("Failed to initialize boot info!\n");
         while (1) {
             __asm__ volatile("hlt");
         }
     }
-    // 初始化
-    BOOT_INFO::init();
-    // 物理内存初始化
-    PMM::get_instance().init();
+    
+    // 获取内存信息
+    vga_printf("Getting memory information...\n");
+    resource_t mem_info = BOOT_INFO::get_memory();
+    vga_printf("Memory info - Available: %zu bytes\n", mem_info.mem.len);
+    
+    // 现在初始化PMM
+    vga_printf("Initializing physical memory manager...\n");
+    if (!PMM::get_instance().init()) {
+        vga_printf("Failed to initialize PMM!\n");
+        while (1) {
+            __asm__ volatile("hlt");
+        }
+    }
+    vga_printf("Physical memory manager initialized successfully!\n");
+    
+    vga_printf("Test completed successfully!\n");
+    
+    while (1) {
+        __asm__ volatile("hlt");
+    }
 }
 
 void test_vga()
