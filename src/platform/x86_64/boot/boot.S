@@ -1,6 +1,6 @@
-/**
- * @file boot.S
- */
+/*
+* boot.S
+*/
 
 //  How many bytes from the start of the file we search for the header.
 #define MULTIBOOT_SEARCH                           32768
@@ -19,7 +19,6 @@
 #define MULTIBOOT_INFO_ALIGN                       0x00000008
 
 // Flags set in the 'flags' member of the multiboot header.
-
 #define MULTIBOOT_TAG_ALIGN                        8
 #define MULTIBOOT_TAG_TYPE_END                     0
 #define MULTIBOOT_TAG_TYPE_CMDLINE                 1
@@ -67,6 +66,7 @@
 #define MULTIBOOT_CONSOLE_FLAGS_CONSOLE_REQUIRED   1
 #define MULTIBOOT_CONSOLE_FLAGS_EGA_TEXT_SUPPORTED 2
 
+// 从保护模式启动 long 模式
 .code32
 // multiboot2 文件头
 // 计算头长度
@@ -76,7 +76,7 @@
 // 8 字节对齐
 .align MULTIBOOT_HEADER_ALIGN
 // 声明所属段
-.section .multiboot,"a"
+.section .text.boot
 multiboot_header:
     // 魔数
     .long MULTIBOOT2_HEADER_MAGIC
@@ -86,8 +86,9 @@ multiboot_header:
     .long HEADER_LENGTH
     // 校验和
     .long CHECKSUM
+    // 其它内容
+	.short MULTIBOOT_HEADER_TAG_END
     // 结束标记
-    .short MULTIBOOT_HEADER_TAG_END
     .short 0
     .long 8
 multiboot_header_end:
@@ -95,10 +96,6 @@ multiboot_header_end:
 // 临时页表 4KB/页
 .section .data.boot
 .align 0x1000
-identity_pd:                    # 专门做 identity 映射
-    .quad 0x000083 | (1<<7)    # pd[0] = 0–2 M
-    .quad 0x000083 | (1<<7) | 0x200000 # pd[1] = 2–4 M
-    .fill 510,8,0              # 其余未映射
 pml4:
     .skip 0x1000
 pdpt:
@@ -108,25 +105,50 @@ pd:
 pt:
     .skip 0x1000
 
-// 临时 GDT - 修正为正确的x86_64段描述符
+// 临时 GDT
 .align 16
 gdt64:
 null_desc:
-    .quad 0x0000000000000000    # Null descriptor
+    .short 0xFFFF
+    .short 0
+    .byte 0
+    .byte 0
+    .byte 0
+    .byte 0
 code_desc:
-    .quad 0x00AF9A000000FFFF    # Kernel code segment (64-bit, executable, readable)
+    .short 0
+    .short 0
+    .byte 0
+    .byte 0x9A
+    .byte 0x20
+    .byte 0
 data_desc:
-    .quad 0x00AF92000000FFFF    # Kernel data segment (writable)
+    .short 0
+    .short 0
+    .byte 0
+    .byte 0x92
+    .byte 0
+    .byte 0
 user_code_desc:
-    .quad 0x00AFFA000000FFFF    # User code segment (64-bit, executable, readable, DPL=3)
+    .short 0
+    .short 0
+    .byte 0
+    .byte 0xFA
+    .byte 0x20
+    .byte 0
 user_data_desc:
-    .quad 0x00AFF2000000FFFF    # User data segment (writable, DPL=3)
+    .short 0
+    .short 0
+    .byte 0
+    .byte 0xF2
+    .byte 0
+    .byte 0
 gdt64_pointer:
     .short gdt64_pointer-gdt64-1
-    .long gdt64
+    .quad gdt64
 gdt64_pointer64:
     .short gdt64_pointer-gdt64-1
-    .long gdt64
+    .quad gdt64
 
 .section .text.boot
 .global _start
@@ -134,8 +156,6 @@ gdt64_pointer64:
 // 在 multiboot2.cpp 中定义
 .extern boot_info_addr
 .extern multiboot2_magic
-
-
 _start:
     // 关中断
     cli
@@ -174,12 +194,7 @@ _start:
     add $0x1000, %ebx
     add $8, %eax
     loop .fill_pt
-
-
     // 填写 CR3
-    mov $identity_pd, %eax
-    mov %eax, 0(%eax)          # pdpt[0] = &identity_pd
-
     mov $pml4, %eax
     mov %eax, %cr3
     // 3. 切换到 long 模式
@@ -193,15 +208,11 @@ _start:
     mov %eax, %cr0
     // 5. 重新设置 GDT
     mov $gdt64_pointer, %eax
-    lgdt (%eax)
+    lgdt 0(%eax)
     // 6. 跳转到 64 位代码执行
-    // 使用绝对地址跳转避免重定位问题
-    mov $0x08, %edx
-    pushl %edx
-    mov $_start64, %edx
-    pushl %edx
-    lret
+    jmp $0x8, $_start64
     hlt
+    ret
 
 .code64
 .section .text.boot
@@ -209,26 +220,38 @@ _start:
 .type _start64, @function
 .extern kernel_main
 .extern cpp_init
-
 _start64:
     // 从这里开始就是 long 模式了
     // 加载 64 位 gdt
-    leaq gdt64_pointer64(%rip), %rax
-    lgdt (%rax)
-    // 手动将寄存器设置为0,其他寄存器一般不需要手动设置
-    xor %rax, %rax
+    mov $gdt64_pointer64, %rax
+    lgdt 0(%rax)
+    // 更新
+    mov $0x10, %rax
+    mov %rax, %ds
+    mov %rax, %es
     mov %rax, %fs
     mov %rax, %gs
+    mov %rax, %ss
+
+    mov %cr0, %rax
+    and $~(1<<2), %rax   
+    or $(1<<1), %rax    
+    mov %rax, %cr0
+
+    mov %cr4, %rax
+    or $(3<<9), %rax      
+    mov %rax, %cr4
+
     // 设置栈地址
-    leaq stack_top(%rip), %rsp
+    mov $stack_top, %rsp
+    add $4096 * 4, %rsp        # 指向栈顶
     // 栈地址按照 4096 字节对齐
-    andq $0xFFFFFFFFFFFFF000, %rsp
+    and $0xFFFFFFFFFFFFF000, %rsp
     // 帧指针修改为 0
     mov $0, %rbp
     // 初始化 C++
     call cpp_init
     call kernel_main
-
     hlt
     ret
 
@@ -241,5 +264,3 @@ _start64:
 stack_top:
     // 跳过 16KB
     .space 4096 * 4
-
-.section .note.GNU-stack,"",@progbits

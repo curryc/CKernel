@@ -40,7 +40,7 @@ bool PMM::init(void) {
         return false;
     }
     
-    vga_printf("PMM init: Total available memory: %zu bytes\n", mem_info.mem.len);
+    vga_printf("PMM_init: Total available memory: %u bytes\n", mem_info.mem.len);
     
     // 设置物理地址的起点与长度
     start               = mem_info.mem.addr;

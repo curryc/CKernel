@@ -15,8 +15,6 @@ SECTIONS {
     PROVIDE (__executable_start = SEGMENT_START("text-segment", 1M));
     /* 设置当前地址计数器到文本段起始位置 */
     . = SEGMENT_START("text-segment", 1M);
-
-    .multiboot      : {*(.multiboot)}
     
     /* 引导代码段，包含引导过程所需的文本、数据和BSS段 */
     .boot           : { *(.text.boot) *(.data.boot) *(.bss.boot) }

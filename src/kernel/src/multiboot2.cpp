@@ -89,7 +89,7 @@ bool MULTIBOOT2::get_memory(const iter_data_t *_iter_data, void *_data)
         return false;
     }
 
-    vga_printf("multiboot2_get_memory:Memory tag found\n");
+    vga_printf("multiboot2_get_memory: Memory tag found\n");
 
     resource_t *resource = (resource_t *)_data;
     resource->type |= resource_t::MEM;
@@ -104,15 +104,11 @@ bool MULTIBOOT2::get_memory(const iter_data_t *_iter_data, void *_data)
     uint8_t *tag_end = (uint8_t*)mmap_tag + tag_size;
     uint32_t entry_size = mmap_tag->entry_size;
 
-    vga_printf("Tag size: %d, Entry size: %d\n", tag_size, entry_size);
+    vga_printf("multiboot2_get_memory: Tag size: %d, Entry size: %d\n", tag_size, entry_size);
 
-    while (1)
-    {
-        __asm__ volatile("hlt");
-    }
     // 验证基本参数
     if (entry_size == 0 || tag_size < sizeof(multiboot_tag_mmap_t)) {
-        vga_printf("Invalid mmap tag parameters\n");
+        vga_printf("multiboot2_get_memory: Invalid mmap tag parameters\n");
         return false;
     }
 
@@ -123,22 +119,17 @@ bool MULTIBOOT2::get_memory(const iter_data_t *_iter_data, void *_data)
 
     // 计算实际可以访问的条目数量
     size_t max_entries = (tag_size - sizeof(multiboot_tag_mmap_t)) / entry_size;
-    vga_printf("Max entries: %zu\n", max_entries);
 
     // 遍历所有内存映射项 - 使用更安全的遍历条件
     for (size_t i = 0; i < max_entries; i++) {
         // 检查是否还有足够的空间读取完整的条目
         if ((uint8_t*)mmap + sizeof(MULTIBOOT2::multiboot_mmap_entry_t) > tag_end) {
-            vga_printf("Reached tag boundary, stopping\n");
+            vga_printf("multiboot2_get_memory: Reached tag boundary, stopping\n");
             break;
         }
 
-        vga_printf("Entry %zu: Base addr: 0x%lx, Length: 0x%lx, Type: %u\n", 
-                   i, mmap->addr, mmap->len, mmap->type);
-
         // 验证内存区域的有效性
         if (mmap->len == 0) {
-            vga_printf("  -> Skipping zero-length region\n");
             mmap = (multiboot_mmap_entry_t*)((uint8_t*)mmap + entry_size);
             continue;
         }
@@ -147,13 +138,12 @@ bool MULTIBOOT2::get_memory(const iter_data_t *_iter_data, void *_data)
         if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE) {
             // 累加可用内存大小
             resource->mem.len += mmap->len;
-            vga_printf("  -> Added to available memory\n");
         }
         // 移动到下一个内存映射项
         mmap = (multiboot_mmap_entry_t*)((uint8_t*)mmap + entry_size);
     }
 
-    vga_printf("Total available memory: %zu bytes\n", resource->mem.len);
+    vga_printf("multiboot2_get_memory: Total available memory: %u bytes\n", resource->mem.len);
     
     // 移除无限循环，让函数正常返回
     return true;
@@ -176,11 +166,6 @@ namespace BOOT_INFO
         if (inited == false)
         {
             inited = true;
-            vga_printf("boot_info_init:BOOT_INFO init.\n");
-        }
-        else
-        {
-            vga_printf("boot_info_init:BOOT_INFO reinit.\n");
         }
         return res;
     }

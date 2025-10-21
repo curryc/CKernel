@@ -1,13 +1,13 @@
 # GDB调试脚本
 target remote :1234
+file ./build/grub/kernel.elf
 set confirm off
-set pagination off
+set architecture i386:x86-64
+handle SIGTRAP stop print
 
 # 设置断点
 break kernel_main
-break test
-break INTERRUPTS::init
-break port_outb
+break multiboot2.cpp:118
 
 # 继续执行
 continue
@@ -19,24 +19,11 @@ commands 1
     continue
 end
 
+
+
 commands 2
-    echo "Hit test\n"
+    echo "Hit MULTIBOOT2::get_memory\n"
     backtrace
-    continue
-end
-
-commands 3
-    echo "Hit INTERRUPTS::init\n"
-    backtrace
-    print idtr
-    print idt[0]
-    continue
-end
-
-commands 4
-    echo "Hit port_outb\n"
-    backtrace
-    print _port
-    print _data
+    print max_entries
     continue
 end

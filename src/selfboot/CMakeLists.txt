@@ -24,7 +24,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/selfboot/kernel.bin
             ${CMAKE_CURRENT_SOURCE_DIR}/mainself.c
     COMMAND ${CMAKE_OBJCOPY} -O binary ${CMAKE_BINARY_DIR}/selfboot/kernel.elf ${CMAKE_BINARY_DIR}/selfboot/kernel.bin
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/mainself.c ${CMAKE_CURRENT_SOURCE_DIR}/linkerself.ld
-    COMMENT "Building simple kernel for selfboot"
+    COMMENT "Building kernel for selfboot"
 )
 
 # 1.44 MB 软盘镜像
