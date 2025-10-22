@@ -66,7 +66,7 @@
 #define MULTIBOOT_CONSOLE_FLAGS_CONSOLE_REQUIRED   1
 #define MULTIBOOT_CONSOLE_FLAGS_EGA_TEXT_SUPPORTED 2
 
-// 从保护模式启动 long 模式
+// 从32保护模式启动64模式
 .code32
 // multiboot2 文件头
 // 计算头长度
@@ -161,7 +161,7 @@ _start:
     cli
     // multiboot2_info 结构体指针
     mov %ebx, boot_info_addr
-    // 魔数
+    // multiboot2_magic魔数
     mov %eax, multiboot2_magic
     // 从保护模式跳转到长模式
     // 1. 允许 PAE
@@ -233,18 +233,20 @@ _start64:
     mov %rax, %gs
     mov %rax, %ss
 
+    // 启用 SSE 浮点指令
     mov %cr0, %rax
-    and $~(1<<2), %rax   
-    or $(1<<1), %rax    
+    and $~(1<<2), %rax      //清除 CR0.EM（模拟协处理器位）
+    or $(1<<1), %rax        // 设置 CR0.MP（监视协处理器）
     mov %rax, %cr0
 
     mov %cr4, %rax
-    or $(3<<9), %rax      
-    mov %rax, %cr4
+    or $(3<<9), %rax        // 设置 CR4.OSFXSR（支持 fxsave/fxrstor）
+    mov %rax, %cr4          // 设置 CR4.OSXMMEXCPT（支持 unmasked SSE 异常）
 
     // 设置栈地址
     mov $stack_top, %rsp
-    add $4096 * 4, %rsp        # 指向栈顶
+    // 指向栈顶
+    add $4096 * 4, %rsp       
     // 栈地址按照 4096 字节对齐
     and $0xFFFFFFFFFFFFF000, %rsp
     // 帧指针修改为 0
@@ -255,7 +257,7 @@ _start64:
     hlt
     ret
 
-// 声明所属段
+// 栈设置
 .section .bss.boot
 // 16 字节对齐
 .align 16

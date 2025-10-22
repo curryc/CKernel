@@ -15,30 +15,26 @@
 // 声明内核主函数
 extern "C" void kernel_main();
 
+void infiloop()
+{
+    // 无限循环
+    while (1) {
+        __asm__ volatile("hlt");
+    }
+}
+
 void test()
 {
     // 初始化
-    vga_printf("main:Initializing boot info...\n");
     if (!BOOT_INFO::init()) {
         vga_printf("main:Failed to initialize boot info!\n");
-        while (1) {
-            __asm__ volatile("hlt");
-        }
+        infiloop();
     }
 
-    // 现在初始化PMM
-    vga_printf("main:Initializing physical memory manager...\n");
+    // 初始化PMM
     if (!PMM::get_instance().init()) {
         vga_printf("main:Failed to initialize PMM!\n");
-        while (1) {
-            __asm__ volatile("hlt");
-        }
-    }
-    
-    vga_printf("Test completed successfully!\n");
-    
-    while (1) {
-        __asm__ volatile("hlt");
+        infiloop();
     }
 }
 
@@ -57,9 +53,6 @@ void kernel_main()
 {
     test_vga();
     test();
-    // 无限循环
-    while (1)
-    {
-        __asm__ volatile("hlt");
-    }
+    vga_printf("main: test done\n");
+    infiloop();
 }
