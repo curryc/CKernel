@@ -29,13 +29,13 @@ bool MULTIBOOT2::multiboot2_init(void)
         return false;
     }
     
-    // 修复地址对齐检查 - addr已经是uintptr_t，不需要reinterpret_cast
+    // 修复地址对齐检查
     if ((addr & 7) != 0) {
         vga_printf("multiboot2_init: Address not aligned! addr=0x%lx\n", addr);
         return false;
     }
     
-    // 添加空指针检查
+    // 空指针检查
     if (addr == 0) {
         vga_printf("multiboot2_init: Boot info address is NULL!\n");
         return false;
@@ -49,7 +49,7 @@ bool MULTIBOOT2::multiboot2_init(void)
     
     vga_printf("multiboot2_init: Reading boot info size...\n");
     
-    // 更安全的内存读取 - 逐字节读取
+    // 内存读取 - 逐字节读取
     uint32_t size = 0;
     uint8_t* size_ptr = (uint8_t*)addr;
     for (int i = 0; i < 4; i++) {
@@ -113,7 +113,6 @@ bool MULTIBOOT2::get_memory(const iter_data_t *_iter_data, void *_data)
     }
 
     // 指向第一个内存映射项
-    // entries是一个灵活数组成员，需要正确计算偏移
     MULTIBOOT2::multiboot_mmap_entry_t *mmap = (MULTIBOOT2::multiboot_mmap_entry_t *)
         ((uint8_t*)mmap_tag + sizeof(multiboot_tag_mmap_t));
 
@@ -135,7 +134,7 @@ bool MULTIBOOT2::get_memory(const iter_data_t *_iter_data, void *_data)
         }
 
         // 如果是可用内存
-        if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE) {
+        if (mmap->type == MULTIBOOT2::MULTIBOOT_MEMORY_AVAILABLE) {
             // 累加可用内存大小
             resource->mem.len += mmap->len;
         }
@@ -145,7 +144,6 @@ bool MULTIBOOT2::get_memory(const iter_data_t *_iter_data, void *_data)
 
     vga_printf("multiboot2_get_memory: Total available memory: %u bytes\n", resource->mem.len);
     
-    // 移除无限循环，让函数正常返回
     return true;
 }
 

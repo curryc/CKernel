@@ -49,31 +49,28 @@ FIRSTFIT::FIRSTFIT(const char* _tag, uintptr_t _addr, size_t _len)
     : ALLOCATOR(_tag, _addr, _len) {
     // 所有清零
     bzero(map, sizeof(map));
-    info("%s: 0x%p(0x%X pages) init.\n", tag, allocator_start_addr,
-         allocator_length);
+    vga_printf("%s: 0x%p(0x%X pages) init.\n", tag, allocator_start_addr, allocator_length);
     return;
 }
 
 FIRSTFIT::~FIRSTFIT(void) {
-    info("%s finit.\n", tag);
+    vga_printf("%s finit.\n", tag);
     return;
 }
 
 uintptr_t FIRSTFIT::alloc(size_t _len) {
     uintptr_t res_addr = 0;
-    // 在位图中寻找连续 _len 的位置
+    // 在位图中寻找连续 _len 的空闲位置
     size_t    idx      = find_len(_len, false);
     // 如果为 ~0 说明未找到
     if (idx == ~(size_t)0) {
-        // err("NO ENOUGH MEM.\n");
         return res_addr;
     }
-    // 遍历区域
+    // 遍历区域并置为使用
     for (auto i = idx; i < idx + _len; i++) {
         // 置位，说明已使用
         set(i);
     }
-    // 计算实际地址
     // 分配器起始地址+页长度*第几页
     res_addr              = allocator_start_addr + (common::PAGE_SIZE * idx);
     // 更新统计信息

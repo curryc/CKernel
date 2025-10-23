@@ -9,7 +9,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_link_libraries(${PROJECT_NAME} PUBLIC 
     libc 
     libcxx
-    port
+    platform
 )
 
 # 拒绝外部C++库

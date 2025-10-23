@@ -49,11 +49,11 @@ if(TARGET boot_grub_x86_64)
             $<TARGET_FILE:common>
             $<TARGET_FILE:libc>
             $<TARGET_FILE:libcxx>
-            $<TARGET_FILE:port>
+            $<TARGET_FILE:platform>
             --end-group
             -lgcc
             -o ${CMAKE_BINARY_DIR}/grub/kernel.elf
-        DEPENDS  kernel_grub common libc libcxx boot_grub_x86_64 port
+        DEPENDS  kernel_grub common libc libcxx boot_grub_x86_64 platform
         VERBATIM
         COMMAND_EXPAND_LISTS
     )

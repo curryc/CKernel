@@ -12,15 +12,18 @@
 #include "common.h"
 #include "cstddef"
 #include "cstdint"
+#include "vgaprint.h"
 
 /**
  * @brief 使用 first fit 算法的分配器
+ * 通过一个数组记录所有页，从前往后遍历，找到第一个大小满足的区块即alloc
  */
 class FIRSTFIT : ALLOCATOR
 {
 private:
     /// 字长
     static constexpr const uint64_t BITS_PER_WORD = sizeof(uintptr_t);
+    // 需要使用mask和shift找具体的位
 #if __WORDSIZE == 64
     /// 字长为 64 时的 掩码
     static constexpr const uint64_t MASK = 0x3F;
@@ -32,10 +35,9 @@ private:
     /// 2^5==32
     static constexpr const uint64_t SHIFT = 5;
 #endif
-    /// 位图数组长度，设置为占用一个页，4kb，32768 个位，每个 bit
-    /// 代表一页，最大表示 128MB
+    // 所有的块都挂到一个数组中，每个位表示其是否被使用
     static constexpr const size_t BITS_ARR_SIZE = common::PAGE_SIZE / BITS_PER_WORD;
-    /// 位图，每一位表示一页内存，1 表示已使用，0 表示未使用
+    // 位图，每一位表示一页内存，1 表示已使用，0 表示未使用
     uintptr_t map[BITS_ARR_SIZE];
 
     /**

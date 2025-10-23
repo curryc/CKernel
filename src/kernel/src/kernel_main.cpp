@@ -25,17 +25,18 @@ void infiloop()
 
 void test()
 {
-    // 初始化
+    // 内核信息初始化
     if (!BOOT_INFO::init()) {
         vga_printf("main:Failed to initialize boot info!\n");
         infiloop();
     }
-
     // 初始化PMM
     if (!PMM::get_instance().init()) {
         vga_printf("main:Failed to initialize PMM!\n");
         infiloop();
     }
+    // 清屏，开始使用TUI
+    // vga_init();
 }
 
 void test_vga()
@@ -53,6 +54,5 @@ void kernel_main()
 {
     test_vga();
     test();
-    vga_printf("main: test done\n");
     infiloop();
 }

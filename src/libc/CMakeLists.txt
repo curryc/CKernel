@@ -20,7 +20,7 @@ if(libc_src)
     )
     
     target_link_libraries(${PROJECT_NAME}  PRIVATE 
-        port
+        platform
     )
     # 设置位置无关代码属性
     set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE OFF)
@@ -29,7 +29,7 @@ else()
     add_library(${PROJECT_NAME} INTERFACE)
     
     target_link_libraries(${PROJECT_NAME}  PRIVATE 
-        port
+        platform
     )
     # 为INTERFACE库设置包含目录
     target_include_directories(${PROJECT_NAME} PUBLIC 

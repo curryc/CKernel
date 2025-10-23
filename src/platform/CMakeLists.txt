@@ -5,7 +5,7 @@ enable_language(ASM)
 # 设置汇编编译器标志
 set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} -m64")
 # 检查x86_64平台文件是否存在
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/x86_64/idt/idt.S AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/x86_64/boot/boot.S)
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/x86_64/boot/boot.S)
     # 为x86_64平台创建引导对象，明确列出两个汇编文件
     add_library(boot_grub_x86_64 STATIC 
         x86_64/idt/idt.S 
@@ -18,12 +18,8 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/x86_64/idt/idt.S AND EXISTS ${CMAKE_CURREN
     )
 
     # 添加端口读写库
-    add_library(port STATIC x86_64/port/port.c)
-    target_include_directories(port PUBLIC x86_64/port/include)
-    
-    # 使 port 库可以在父作用域中使用
-    set_property(TARGET port PROPERTY EXPORT_NAME port)
-    export(TARGETS port NAMESPACE platform_x86_64_ FILE port-targets.cmake)
+    add_library(platform STATIC x86_64/port/port.c)
+    target_include_directories(platform PUBLIC x86_64/port/include)
 
     # 安装链接脚本
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/x86_64/linker.ld)
