@@ -14,6 +14,10 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-stack-protector -U_FORTIFY_SOURCE -fno-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-stack-protector -U_FORTIFY_SOURCE -fno-pic -fno-exceptions -fno-rtti")
 set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS} -f elf64")
 
+# 禁用标准库、启动文件、系统库
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffreestanding -nostdlib -nostartfiles -nodefaultlibs")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffreestanding -nostdlib -nostartfiles -nodefaultlibs")
+
 # 添加头文件目录
 include_directories(include)
 
@@ -45,15 +49,11 @@ if(TARGET boot_grub_x86_64)
             -L ${LIBGCC_DIR}
             --start-group
             $<TARGET_FILE:boot_grub_x86_64>
-            $<TARGET_FILE:kernel_grub>
-            $<TARGET_FILE:common>
-            $<TARGET_FILE:libc>
-            $<TARGET_FILE:libcxx>
-            $<TARGET_FILE:platform>
+            $<TARGET_FILE:kernel>
             --end-group
             -lgcc
             -o ${CMAKE_BINARY_DIR}/grub/kernel.elf
-        DEPENDS  kernel_grub common libc libcxx boot_grub_x86_64 platform
+        DEPENDS  kernel common libc libcxx boot_grub_x86_64 platform
         VERBATIM
         COMMAND_EXPAND_LISTS
     )

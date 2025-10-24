@@ -220,6 +220,7 @@ _start:
 .type _start64, @function
 .extern kernel_main
 .extern cpp_init
+.extern plat_time_init
 _start64:
     // 从这里开始就是 long 模式了
     // 加载 64 位 gdt
@@ -253,6 +254,7 @@ _start64:
     mov $0, %rbp
     // 初始化 C++
     call cpp_init
+    call plat_time_init
     call kernel_main
     hlt
     ret

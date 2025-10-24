@@ -17,9 +17,11 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/x86_64/boot/boot.S)
         POSITION_INDEPENDENT_CODE OFF
     )
 
-    # 添加端口读写库
-    add_library(platform STATIC x86_64/port/port.c)
-    target_include_directories(platform PUBLIC x86_64/port/include)
+    # 添加其他库
+    add_library(platform OBJECT 
+    x86_64/src/port.c
+    x86_64/src/time.c)
+    target_include_directories(platform PUBLIC x86_64/include)
 
     # 安装链接脚本
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/x86_64/linker.ld)
