@@ -9,6 +9,7 @@
 
 #include "stdarg.h"
 #include "stddef.h"
+#include "port.h"
 
 /* 颜色可选 */
 enum vga_color {
@@ -25,6 +26,12 @@ void vga_init(void);                    /* 第一次调用清屏 */
 void vga_setcolor(enum vga_color fg);   /* 默认 VGA_WHITE */
 void vga_puts(const char *s);           /* 原始字符串 */
 void vga_printf(const char *fmt, ...);  /* 格式化打印 */
+
+/**
+ * @brief 串口打印字符
+ * @param  c
+ */
+void serial_putc(char c);
 
 #ifdef __cplusplus
 }

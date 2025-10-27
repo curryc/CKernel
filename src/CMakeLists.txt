@@ -87,6 +87,7 @@ if(TARGET boot_grub_x86_64)
     add_custom_target(run-grub
         COMMAND qemu-system-x86_64 -cdrom ${ISO_FILE} 
         -m 128M 
+        -enable-kvm
         -serial stdio 
         -gdb tcp::1234 
         DEPENDS grub_iso

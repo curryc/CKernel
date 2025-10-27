@@ -72,9 +72,7 @@ void vga_setcolor(enum vga_color fg)
 {
     current_color = fg;
 }
-
-#include "port.h"
-static void serial_putc(char c)
+void serial_putc(char c)
 {
     while (!(port_inb(0x3F8 + 5) & 0x20))
         ; /* 等待 THR 空 */
@@ -83,7 +81,7 @@ static void serial_putc(char c)
         serial_putc('\r'); /* 回车换行 */
 }
 
-/* 极简 printf，只支持 %d %u %x %s %c */
+
 void vga_printf(const char *fmt, ...)
 {
     va_list ap;

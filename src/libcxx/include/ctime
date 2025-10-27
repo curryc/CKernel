@@ -1,0 +1,20 @@
+/**
+ * @file ctime
+ * @brief 
+ * @author cbw (chenboven@qq.com)
+ * @date 2025-10-27
+ */
+#ifndef CKERNEL_CTIME
+#define CKERNEL_CTIME
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "time.h"
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

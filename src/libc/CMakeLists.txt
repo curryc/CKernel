@@ -3,9 +3,10 @@ PROJECT(libc C)
 # 查找各个子目录下的源文件
 aux_source_directory(${libc_SOURCE_DIR}/src/stdio stdio_src)
 aux_source_directory(${libc_SOURCE_DIR}/src/string string_src)
+aux_source_directory(${libc_SOURCE_DIR}/src/time time_src)
 
 # 合并所有源文件
-set(libc_src ${stdio_src} ${string_src})
+set(libc_src ${stdio_src} ${string_src} ${time_src})
 
 # 创建库
 if(libc_src)
@@ -16,6 +17,7 @@ if(libc_src)
     target_include_directories(${PROJECT_NAME} PUBLIC 
         ./include
     )
+    target_link_libraries(${PROJECT_NAME} PRIVATE platform)
     
 else()
     # 如果没有源文件，则创建一个空的INTERFACE库
@@ -26,4 +28,5 @@ else()
         ${libc_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/../common/include
     )
+    target_link_libraries(${PROJECT_NAME} PRIVATE platform)
 endif()

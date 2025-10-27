@@ -1,4 +1,5 @@
 #include "tui.h"
+#include "vgaprint.h"
 
 pos_t::pos_t(const uint8_t _col, const uint8_t _row)
     : col(_col)
@@ -104,6 +105,8 @@ bool TUI::escapeconv(const char _c) {
             pos.row++;
             // 列归零
             pos.col = 0;
+            // 串口换行
+            serial_putc(_c);
             return true;
         }
         // 如果是 \t
@@ -134,7 +137,7 @@ void TUI::scroll(void) {
         for (size_t i = (HEIGHT - 1) * WIDTH; i < HEIGHT * WIDTH; i++) {
             write(i, char_t(' ', color));
         }
-        // 向上移动了一行，所以 cursor_y 现在是 24
+        // 向上移动了一行
         pos.row = HEIGHT - 1;
     }
     return;
@@ -168,6 +171,8 @@ void TUI::put_char(const char _c) {
     if (escapeconv(_c) == false) {
         // 在指定位置输出指定字符
         put_entry_at(_c, color, pos.col, pos.row);
+        // 输出到端口
+        serial_putc(_c);
         // 如果到达最后一列则换行
         if (++pos.col >= WIDTH) {
             pos.col = 0;

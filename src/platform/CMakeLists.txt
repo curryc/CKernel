@@ -20,7 +20,7 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/x86_64/boot/boot.S)
     # 添加其他库
     add_library(platform OBJECT 
     x86_64/src/port.c
-    x86_64/src/time.c)
+    x86_64/src/plat_time.c)
     target_include_directories(platform PUBLIC x86_64/include)
 
     # 安装链接脚本
