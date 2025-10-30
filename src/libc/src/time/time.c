@@ -6,7 +6,7 @@
  */
 
 #include "time.h"
-#include "plat_time.h"
+#include "c_time.h"
 #include "string.h"
 #include "stdio.h"
 #include "stdarg.h"

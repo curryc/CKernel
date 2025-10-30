@@ -12,29 +12,29 @@ IO& IO::get_instance(void) {
     return io_instance;
 }
 uint8_t IO::inb(const uint32_t port) {
-    return port_inb(port);
+    return PORT::port_inb(port);
 }
 
 uint16_t IO::inw(const uint32_t port) {
-    return port_inw(port);
+    return PORT::port_inw(port);
 }
 
 uint32_t IO::ind(const uint32_t port) {
-    return port_ind(port);
+    return PORT::port_ind(port);
 }
 
 void IO::outb(const uint32_t port, const uint8_t data) {
-    port_outb(port, data);
+    PORT::port_outb(port, data);
     return;
 }
 
 void IO::outw(const uint32_t port, const uint16_t data) {
-    port_outw(port, data);
+    PORT::port_outw(port, data);
     return;
 }
 
 void IO::outd(const uint32_t port, const uint32_t data) {
-    port_outd(port, data);
+    PORT::port_outd(port, data);
     return;
 }
 

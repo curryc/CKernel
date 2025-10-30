@@ -1,18 +1,13 @@
-/**
- * @file port.h
- * @brief 在x86_64中实现端口读写
- * @author curryc (chencurry5@gmail.com)
- * @date 2025-09-29
- */
+#ifndef CKERNEL_CPU_H
+#define CKERNEL_CPU_H
 
-#ifndef CKERNEL_PORT_H
-#define CKERNEL_PORT_H
-
-// 使用标准整数类型
 #include <stdint.h>
 
-namespace PORT
+#ifdef __cplusplus
+extern "C"
 {
+#endif
+
     /**
      * @brief  读一个字节
      * @param  _port           要读的端口
@@ -61,6 +56,8 @@ namespace PORT
      */
     void port_outd(const uint32_t _port, const uint32_t _data);
 
+#ifdef __cplusplus
 }
+#endif
 
-#endif // CKERNEL_PORT_H
+#endif

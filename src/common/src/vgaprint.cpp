@@ -74,9 +74,9 @@ void vga_setcolor(enum vga_color fg)
 }
 void serial_putc(char c)
 {
-    while (!(port_inb(0x3F8 + 5) & 0x20))
+    while (!(PORT::port_inb(0x3F8 + 5) & 0x20))
         ; /* 等待 THR 空 */
-    port_outb(0x3F8, c);
+    PORT::port_outb(0x3F8, c);
     if (c == '\n')
         serial_putc('\r'); /* 回车换行 */
 }

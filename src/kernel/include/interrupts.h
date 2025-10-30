@@ -92,7 +92,8 @@ extern "C" void irq14(void);
 extern "C" void irq15(void);
 
 // 中断上下文结构体，与汇编代码中保存的寄存器一致
-struct intr_context_t {
+struct intr_context_t
+{
     // 由pusha_64保存的寄存器
     uint64_t r15;
     uint64_t r14;
@@ -118,20 +119,27 @@ struct intr_context_t {
     uint64_t ss;
 };
 
-
 namespace INTERRUPTS
 {
+    /// 最大中断数
+    static constexpr const uint32_t INTERRUPT_MAX = 16;
+    /// 最大异常数
+    static constexpr const uint32_t EXCP_MAX      = 16;
 
     // IDT条目结构 (符合x86_64规范)
     struct idt_entry_t
     {
-        uint16_t offset_low;      // 偏移低16位
-        uint16_t selector;        // 代码段选择子
-        uint8_t ist;              // IST (Interrupt Stack Table)
-        uint8_t type_attr;        // 类型和属性
-        uint16_t offset_mid;      // 偏移中16位
-        uint32_t offset_high;     // 偏移高32位
-        uint32_t reserved;        // 保留必须为0
+        uint16_t offset_low;  // 偏移低16位
+        uint16_t selector;    // 代码段选择子
+        uint64_t ist : 3;     // 中断栈表
+        uint64_t zero0 : 5;   // 填充 0
+        uint64_t type : 4;    // 类型
+        uint64_t zero1 : 1;   // 填充 0
+        uint64_t dpl : 2;     // 权限
+        uint64_t p : 1;       // 存在位
+        uint16_t offset_mid;  // 偏移中16位
+        uint32_t offset_high; // 偏移高32位
+        uint32_t reserved;    // 保留必须为0
     } __attribute__((packed));
 
     // IDTR结构
@@ -140,6 +148,7 @@ namespace INTERRUPTS
         uint16_t limit;
         uint64_t base;
     } __attribute__((packed));
+
     /**
      * @brief 初始化中断系统
      * @return true 成功初始化
@@ -163,7 +172,7 @@ namespace INTERRUPTS
      * @param context 中断上下文
      * @param err_code 错误码（如果没有则为0）
      */
-    typedef void (*isr_handler_t)(uint8_t irq_num, intr_context_t* context, uint64_t err_code);
+    typedef void (*isr_handler_t)(uint8_t irq_num, intr_context_t *context, uint64_t err_code);
 
     /**
      * @brief 注册ISR处理函数
@@ -177,7 +186,7 @@ namespace INTERRUPTS
      * @param irq_num 中断号
      * @param context 中断上下文
      */
-    typedef void (*irq_handler_t)(uint8_t irq_num, intr_context_t* context);
+    typedef void (*irq_handler_t)(uint8_t irq_num, intr_context_t *context);
 
     /**
      * @brief 注册IRQ处理函数
@@ -194,30 +203,30 @@ namespace INTERRUPTS
 
 } // namespace INTERRUPTS
 
-
 // 汇编函数声明
-extern "C" {
+extern "C"
+{
     /**
      * @brief 加载IDT
      * @param idtr IDT寄存器地址
      * @return int64_t 成功返回0，失败返回-1
      */
     int64_t idt_load(uint64_t idtr);
-    
+
     /**
      * @brief ISR处理函数（由汇编调用）
      * @param irq_num 中断号
      * @param context 中断上下文
      * @param err_code 错误码
      */
-    void isr_handler(uint8_t irq_num, intr_context_t* context, uint64_t err_code);
-    
+    void isr_handler(uint8_t irq_num, intr_context_t *context, uint64_t err_code);
+
     /**
      * @brief IRQ处理函数（由汇编调用）
      * @param irq_num IRQ号
      * @param context 中断上下文
      */
-    void irq_handler(uint8_t irq_num, intr_context_t* context);
+    void irq_handler(uint8_t irq_num, intr_context_t *context);
 }
 
 #endif // CKERNEL_INTERRUPTS_H

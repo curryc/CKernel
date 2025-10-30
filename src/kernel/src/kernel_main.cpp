@@ -80,18 +80,23 @@ void test()
 
     if (!BOOT_INFO::init()) {
         vga_printf("main:Failed to initialize boot info!\n");
-        halt();
+        CPU::halt();
     }
 
     // 初始化PMM
     if (!PMM::get_instance().init()) {
         vga_printf("main:Failed to initialize PMM!\n");
-        halt();
+        CPU::halt();
     }
     // 清屏，开始使用TUI
     vga_init();
-    // PMM测试
-    pmm_test();
+    // pmm_test();// PMM测试
+
+    // 初始化中断
+    if (!INTERRUPTS::init()) {
+        vga_printf("main:Failed to initialize interrupts!\n");
+        CPU::halt();
+    }
 }
 
 void test_vga()
@@ -111,5 +116,5 @@ void kernel_main()
     test();
 
 
-    halt();
+    CPU::halt();
 }
