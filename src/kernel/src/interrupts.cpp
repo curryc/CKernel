@@ -66,6 +66,7 @@ namespace INTERRUPTS
         // 获取代码段选择子（假设为0x08）
         uint16_t code_selector = 0x08;
 
+        // 创建IDT表项
         
 
         // 在加载IDT之前验证IDTR

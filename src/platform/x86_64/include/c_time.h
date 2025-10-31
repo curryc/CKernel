@@ -1,8 +1,7 @@
-#ifndef CKERNEL_CPU_H
-#define CKERNEL_CPU_H
+#ifndef CKERNEL_C_TIME_H
+#define CKERNEL_C_TIME_H
 
 #include "stdint.h"
-#include "cpu.h"
 
 /* 宏定义 */
 #define PIT_CONST 1193 /* PIT 每毫秒计数值 */

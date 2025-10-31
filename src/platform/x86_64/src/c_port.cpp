@@ -10,7 +10,7 @@ extern "C" {
      * @warning 不处理执行失败的问题
      */
     uint8_t port_inb(const uint32_t _port){
-        return PORT::port_inb;
+        return PORT::port_inb(_port);
     }
 
     /**
@@ -20,7 +20,7 @@ extern "C" {
      * @warning 不处理执行失败的问题
      */
     void port_outb(const uint32_t _port, const uint8_t _data){
-        PORT::port_outb();
+        PORT::port_outb(_port, _data);
     }
 
     /**
@@ -30,7 +30,7 @@ extern "C" {
      * @warning 不处理执行失败的问题
      */
     uint16_t port_inw(const uint32_t _port){
-        return PORT::port_inw();
+        return PORT::port_inw(_port);
     }
 
     /**
@@ -40,7 +40,7 @@ extern "C" {
      * @warning 不处理执行失败的问题
      */
     void port_outw(const uint32_t _port, const uint16_t _data){
-        PORT::port_outw();
+        PORT::port_outw(_port, _data);
     }
 
     /**
@@ -50,7 +50,7 @@ extern "C" {
      * @warning 不处理执行失败的问题
      */
     uint32_t port_ind(const uint32_t _port){
-        return PORT::port_ind();
+        return PORT::port_ind(_port);
     }
 
     /**
@@ -60,7 +60,7 @@ extern "C" {
      * @warning 不处理执行失败的问题
      */
     void port_outd(const uint32_t _port, const uint32_t _data){
-        PORT::port_outd();
+        PORT::port_outd(_port, _data);
     }
 
 }   // extern "C"

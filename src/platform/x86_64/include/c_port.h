@@ -1,7 +1,7 @@
-#ifndef CKERNEL_CPU_H
-#define CKERNEL_CPU_H
+#ifndef CKERNEL_C_PORT_H
+#define CKERNEL_C_PORT_H
 
-#include <stdint.h>
+#include "stdint.h"
 
 #ifdef __cplusplus
 extern "C"
