@@ -17,7 +17,7 @@ if(libc_src)
     target_include_directories(${PROJECT_NAME} PUBLIC 
         ./include
     )
-    target_link_libraries(${PROJECT_NAME} PRIVATE platform)
+    # target_link_libraries(${PROJECT_NAME} PRIVATE platform)
     
 else()
     # 如果没有源文件，则创建一个空的INTERFACE库

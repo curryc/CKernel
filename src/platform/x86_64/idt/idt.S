@@ -8,37 +8,30 @@
 
 .section .text
 .global idt_load
+.type idt_load, @function
 // 声明 C 中的函数
 .extern isr_handler
 .extern irq_handler
 
 idt_load:
-    // 验证输入参数
-    test %rdi, %rdi
-    jz idt_load_fail
-    
-    // 验证IDTR结构
-    mov 0(%rdi), %ax        // limit
-    mov 2(%rdi), %rax       // base (低48位有效)
-    
-    test %rax, %rax         // 检查base是否为0
-    jz idt_load_fail
-    
-    test %ax, %ax           // 检查limit是否为0
-    jz idt_load_fail
-    
-    // 加载IDT
-    lidt 0(%rdi)
-    
-    // 验证加载成功
-    push %rax
-    sidt 0(%rsp)
-    pop %rax
+    // 非空检查
+    test    %rdi, %rdi
+    jz      1f
+    // limit 必须 ≥ 8*N-1  (N 个描述符，最小 8*1-1=7)
+    movw    (%rdi), %ax         /* limit */
+    cmpw    $7, %ax
+    jb      1f                  /* < 7 直接失败 */
+    // base 必须 16 字节对齐
+    movq    2(%rdi), %rax
+    test    $0xF, %rax
+    jnz     1f
+    // 加载idt
+    lidt    (%rdi)
+    // 成功
+    xor     %rax, %rax
     ret
-    
-idt_load_fail:
-    // 返回错误码
-    mov $-1, %rax
+    // 失败
+1:  mov     $-1, %rax
     ret
 
 
@@ -174,6 +167,7 @@ ISR_ERROR_CODE   13
 // 14 #PF 页故障(有错误代码)
 ISR_ERROR_CODE   14
 // 15 没有使用
+ISR_ERROR_CODE   15
 // 16 #MF 浮点处理单元错误
 ISR_NO_ERROR_CODE 16
 // 17 #AC 对齐检查
@@ -239,3 +233,6 @@ IRQ  13,    45
 IRQ  14,    46
 // IDE1 传输控制使用
 IRQ  15,    47
+
+
+.section .note.GNU-stack,"",@progbits

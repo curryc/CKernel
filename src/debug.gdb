@@ -7,7 +7,7 @@ handle SIGTRAP stop print
 
 # 设置断点
 break kernel_main
-break multiboot2.cpp:118
+break intr.cpp:202
 
 # 继续执行
 continue
@@ -19,11 +19,8 @@ commands 1
     continue
 end
 
-
-
 commands 2
-    echo "Hit MULTIBOOT2::get_memory\n"
+    echo "Hit interrupts::init\n"
     backtrace
-    print max_entries
-    continue
+    next
 end

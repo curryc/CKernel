@@ -78,7 +78,7 @@ bool PMM::init(void)
     {
         // 将 multiboot2/dtb 信息移动到内核空间
         move_boot_info();
-        vga_printf("pmm init.\n");
+        vga_printf("pmm init done.\n");
         return true;
     }
     else
