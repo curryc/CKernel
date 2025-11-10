@@ -176,7 +176,7 @@ void INTERRUPTS::pic_init()
     PORT::port_outb(PIC1_DATA, 0x01);
     PORT::port_outb(PIC2_DATA, 0x01);
 
-    /* 屏蔽所有 IRQ，稍后由驱动打开 */
+    /* 屏蔽所有 IRQ*/
     PORT::port_outb(PIC1_DATA, 0xFF);
     PORT::port_outb(PIC2_DATA, 0xFF);
 }
@@ -305,7 +305,22 @@ int32_t INTERRUPTS::call_irq(uint8_t _no, intr_context_t* _intr_context)
     return -1; // 未找到处理函数
 }
 
-/* ---------- 运行时装载 ---------- */
+void INTERRUPTS::enable_irq(uint8_t irq_num)
+{
+    uint8_t mask = 0;
+    // printk_color(green, "enable_irq mask: %X", mask);
+    if (irq_num >= IRQ8) {
+        mask = ((PORT::port_inb(IO_PIC2C)) & (~(1 << (irq_num % 8))));
+        PORT::port_outb(IO_PIC2C, mask);
+    }
+    else {
+        mask = ((PORT::port_inb(IO_PIC1C)) & (~(1 << (irq_num % 8))));
+        PORT::port_outb(IO_PIC1C, mask);
+    }
+    return;
+}
+
+
 void INTERRUPTS::enable() { 
     __asm__ volatile("sti"); 
 }

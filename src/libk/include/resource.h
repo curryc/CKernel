@@ -10,6 +10,7 @@
 
 #include "cstdint"
 #include "cassert"
+#include "cstddef"
 #include "iostream"
 
 struct resource_t

@@ -68,9 +68,6 @@ public:
         uint64_t ss;
     };
 private:
-    // 系统调用
-    static constexpr const uint32_t IRQ128               = 128;
-
     // IDT条目结构 (符合x86_64规范)
     struct idt_entry_t
     {
@@ -94,7 +91,58 @@ private:
         uint32_t base;
     } __attribute__((packed));
 
+    /// 8259A 相关定义
+    /// Master (IRQs 0-7)
+    static constexpr const uint32_t    IO_PIC1       = 0x20;
+    /// Slave  (IRQs 8-15)
+    static constexpr const uint32_t    IO_PIC2       = 0xA0;
+    static constexpr const uint32_t    IO_PIC1C      = IO_PIC1 + 1;
+    static constexpr const uint32_t    IO_PIC2C      = IO_PIC2 + 1;
+    /// End-of-interrupt command code
+    static constexpr const uint32_t    PIC_EOI       = 0x20;
+
+    /* ---------- PIC 端口 ---------- */
+    static constexpr uint16_t PIC1_COMMAND = 0x20;
+    static constexpr uint16_t PIC1_DATA = 0x21;
+    static constexpr uint16_t PIC2_COMMAND = 0xA0;
+    static constexpr uint16_t PIC2_DATA = 0xA1;
+
 public:
+    // IRQ
+    // 电脑系统计时器
+    static constexpr const uint32_t IRQ0                 = 32;
+    // 键盘
+    static constexpr const uint32_t IRQ1                 = 33;
+    // 与 IRQ9 相接，MPU-401 MD 使用
+    static constexpr const uint32_t IRQ2                 = 34;
+    // 串口设备
+    static constexpr const uint32_t IRQ3                 = 35;
+    // 串口设备
+    static constexpr const uint32_t IRQ4                 = 36;
+    // 建议声卡使用
+    static constexpr const uint32_t IRQ5                 = 37;
+    // 软驱传输控制使用
+    static constexpr const uint32_t IRQ6                 = 38;
+    // 打印机传输控制使用
+    static constexpr const uint32_t IRQ7                 = 39;
+    // 即时时钟
+    static constexpr const uint32_t IRQ8                 = 40;
+    // 与 IRQ2 相接，可设定给其他硬件
+    static constexpr const uint32_t IRQ9                 = 41;
+    // 建议网卡使用
+    static constexpr const uint32_t IRQ10                = 42;
+    // 建议 AGP 显卡使用
+    static constexpr const uint32_t IRQ11                = 43;
+    // 接 PS/2 鼠标，也可设定给其他硬件
+    static constexpr const uint32_t IRQ12                = 44;
+    // 协处理器使用
+    static constexpr const uint32_t IRQ13                = 45;
+    // SATA 主硬盘
+    static constexpr const uint32_t IRQ14                = 46;
+    // SATA 从硬盘
+    static constexpr const uint32_t IRQ15                = 47;
+    // 系统调用
+    static constexpr const uint32_t IRQ128               = 128;
     /**
      * @brief Get the instance object
      * @return INTERRUPTS 
@@ -111,6 +159,12 @@ public:
      * @brief 启用中断
      */
     void enable();
+
+    /**
+     * @brief 启用特定中断
+     * @param  irq_num
+     */
+    void enable_irq(uint8_t irq_num);
 
     /**
      * @brief 禁用中断
@@ -178,18 +232,24 @@ private:
          uint8_t dpl = 0, 
          uint8_t _p = 1);
 
-    
-    /* ---------- PIC 端口 ---------- */
-    static constexpr uint16_t PIC1_COMMAND = 0x20;
-    static constexpr uint16_t PIC1_DATA = 0x21;
-    static constexpr uint16_t PIC2_COMMAND = 0xA0;
-    static constexpr uint16_t PIC2_DATA = 0xA1;
-    static constexpr uint8_t PIC_EOI = 0x20;
     /**
      * @brief 初始化 PIC
      */
     void pic_init();
 
-
 }; // class INTERRUPTS
+
+class TIMER
+{
+public:
+    /**
+     * @brief Get the instance object
+     * @return TIMER&
+     */
+    static TIMER &get_instance();
+    /**
+     * @brief 初始化定时器
+     */
+    bool init();
+};
 #endif // CKERNEL_INTERRUPTS_H

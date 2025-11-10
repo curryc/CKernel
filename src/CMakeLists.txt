@@ -26,7 +26,7 @@ add_subdirectory(platform)
 add_subdirectory(kernel)
 add_subdirectory(libc)
 add_subdirectory(libcxx)
-add_subdirectory(common)
+add_subdirectory(libk)
 add_subdirectory(selfboot)
 
 # 检查x86_64引导目标是否存在
@@ -53,7 +53,7 @@ if(TARGET boot_grub_x86_64)
             --end-group
             -lgcc
             -o ${CMAKE_BINARY_DIR}/grub/kernel.elf
-        DEPENDS  kernel common libc libcxx boot_grub_x86_64 platform
+        DEPENDS  kernel libk libc libcxx boot_grub_x86_64 platform
         VERBATIM
         COMMAND_EXPAND_LISTS
     )

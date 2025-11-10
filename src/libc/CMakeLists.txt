@@ -26,7 +26,6 @@ else()
     # 为INTERFACE库设置包含目录
     target_include_directories(${PROJECT_NAME} PUBLIC 
         ${libc_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/../common/include
     )
-    target_link_libraries(${PROJECT_NAME} PRIVATE platform)
+    # target_link_libraries(${PROJECT_NAME} PRIVATE platform)
 endif()

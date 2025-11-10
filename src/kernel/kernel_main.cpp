@@ -11,8 +11,8 @@
 #include "boot_info.h"
 #include "cpu.h"
 
-#include "iostream"
 #include "ctime"
+#include "cstdio"
 
 
 // 声明内核主函数
@@ -81,7 +81,7 @@ void test()
     }
     // 清屏，开始使用TUI
     vga_init();
-    info("pmm: Initialized successfully!\n");
+    info("Initialized successfully:pmm\n");
     // pmm_test();// PMM测试
 
     // 初始化中断
@@ -89,7 +89,14 @@ void test()
         err("main:Failed to initialize interrupts!\n");
         CPU::halt();
     }
-    info("interrupts:Initialized successfully!\n");
+    info("Initialized successfully:interrupts\n");
+
+    // 初始化时钟
+    if (!TIMER::get_instance().init()) {
+        err("main:Failed to initialize time!\n");
+        CPU::halt();
+    }
+    info("Initialized successfully:timer\n");
 }
 
 void test_vga()

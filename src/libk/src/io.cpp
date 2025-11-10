@@ -107,6 +107,8 @@ int32_t IO::write_string(const char* s) {
     return 0;
 }
 
+#include "stdio.h"
+#include "string.h"
 #include "cstdio"
 
 // 输出缓冲

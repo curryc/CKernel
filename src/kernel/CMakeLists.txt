@@ -4,7 +4,7 @@
 # 添加头文件目录
 PROJECT(kernel CXX)
 
-aux_source_directory(${kernel_SOURCE_DIR}/src/. kernel_src)
+aux_source_directory(${kernel_SOURCE_DIR}/. kernel_src)
 
 add_library(kernel STATIC ${kernel_src})
 
@@ -14,10 +14,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 # 链接
 target_link_libraries(kernel PRIVATE 
-    platform
-    libc 
+    libc
     libcxx
-    common
+    libk
+    platform
 )
 
 set_target_properties(kernel PROPERTIES
