@@ -135,6 +135,7 @@ extern "C"
 }
 static void handler_default(uint8_t intr_num, INTERRUPTS::intr_context_t *)
 {
+    info("Unhandled interrupt %d!", intr_num);
     while (1)
     {
         ;
@@ -145,12 +146,10 @@ static void handler_default(uint8_t intr_num, INTERRUPTS::intr_context_t *)
 
 // 定义 IDT 表
 INTERRUPTS::idt_entry_t INTERRUPTS::idt[EXCP_MAX];
-
 // 定义 IDTR
 INTERRUPTS::idtr_t INTERRUPTS::idtr;
-
 // 定义中断处理函数指针数组
-INTERRUPTS::intr_handler_t INTERRUPTS::interrupt_handlers[INTERRUPT_MAX];
+INTERRUPTS::intr_handler_t INTERRUPTS::interrupt_handlers[EXCP_MAX];
 
 INTERRUPTS &INTERRUPTS::get_instance(void)
 {
@@ -275,7 +274,7 @@ bool INTERRUPTS::init()
     idtr.limit = sizeof(idt) - 1;
     if (idt_load(reinterpret_cast<uint64_t>(&idtr)) != 0)
     {
-        // err("Failed to load IDT\n");
+        err("Failed to load IDT\n");
         return false;
     }
 
@@ -297,7 +296,7 @@ int32_t INTERRUPTS::call_isr(uint8_t _no, intr_context_t* _intr_context)
 
 int32_t INTERRUPTS::call_irq(uint8_t _no, intr_context_t* _intr_context)
 {
-    if (_no < INTERRUPT_MAX && interrupt_handlers[_no] != nullptr)
+    if (_no < EXCP_MAX && interrupt_handlers[_no] != nullptr)
     {
         interrupt_handlers[_no](_no, _intr_context);
         return 0;
@@ -305,19 +304,21 @@ int32_t INTERRUPTS::call_irq(uint8_t _no, intr_context_t* _intr_context)
     return -1; // 未找到处理函数
 }
 
-void INTERRUPTS::enable_irq(uint8_t irq_num)
-{
-    uint8_t mask = 0;
-    // printk_color(green, "enable_irq mask: %X", mask);
-    if (irq_num >= IRQ8) {
-        mask = ((PORT::port_inb(IO_PIC2C)) & (~(1 << (irq_num % 8))));
-        PORT::port_outb(IO_PIC2C, mask);
+void INTERRUPTS::enable_irq(uint8_t irq_num) {
+    uint16_t port;
+    uint8_t mask;
+
+    irq_num = irq_num - 32;
+    if (irq_num >= 8) {
+        port = PIC2_DATA;
+        irq_num -= 8;
+    } else {
+        port = PIC1_DATA;
     }
-    else {
-        mask = ((PORT::port_inb(IO_PIC1C)) & (~(1 << (irq_num % 8))));
-        PORT::port_outb(IO_PIC1C, mask);
-    }
-    return;
+
+    mask = PORT::port_inb(port);
+    mask &= ~(1 << irq_num);
+    PORT::port_outb(port, mask);
 }
 
 

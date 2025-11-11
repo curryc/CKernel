@@ -213,7 +213,7 @@ private:
     /// 最大异常数
     static constexpr const uint32_t EXCP_MAX = 256;
     // 中断处理函数指针数组
-    static intr_handler_t           interrupt_handlers[INTERRUPT_MAX];
+    static intr_handler_t           interrupt_handlers[EXCP_MAX];
     // 256 项 IDT
     static idt_entry_t              idt[EXCP_MAX]; 
     // IDTR
