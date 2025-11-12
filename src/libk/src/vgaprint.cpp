@@ -6,6 +6,7 @@
  */
 #include "stddef.h"
 #include "stdint.h"
+#include "io.h"
 #include "vgaprint.h"
 
 static uint16_t *const VGA_MEM = (uint16_t *)0xB8000;
@@ -74,9 +75,9 @@ void vga_setcolor(enum vga_color fg)
 }
 void serial_putc(char c)
 {
-    while (!(PORT::port_inb(0x3F8 + 5) & 0x20))
+    while (!(IO::get_instance().inb(0x3F8 + 5) & 0x20))
         ; /* 等待 THR 空 */
-    PORT::port_outb(0x3F8, c);
+    IO::get_instance().outb(0x3F8, c);
     if (c == '\n')
         serial_putc('\r'); /* 回车换行 */
 }

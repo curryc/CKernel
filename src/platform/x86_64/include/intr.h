@@ -106,7 +106,6 @@ private:
     static constexpr uint16_t PIC1_DATA = 0x21;
     static constexpr uint16_t PIC2_COMMAND = 0xA0;
     static constexpr uint16_t PIC2_DATA = 0xA1;
-
 public:
     // IRQ
     // 电脑系统计时器

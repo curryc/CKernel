@@ -53,5 +53,11 @@ namespace BOOT_INFO
      * @return resource_t       plic 资源信息
      */
     extern resource_t get_plic(void);
+
+    /**
+     * @brief Get the acpi object
+     * @return resource_t 
+     */
+    extern resource_t get_acpi(void);
 }; // namespace BOOT_INFO
 #endif

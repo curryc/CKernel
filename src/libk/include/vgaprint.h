@@ -9,7 +9,6 @@
 
 #include "stdarg.h"
 #include "stddef.h"
-#include "port.h"
 
 /* 颜色可选 */
 enum vga_color {

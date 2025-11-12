@@ -278,7 +278,7 @@ bool INTERRUPTS::init()
         return false;
     }
 
-    // 初始化 PIC
+    // 初始化 APIC
     pic_init();
 
     // info("Interrupt subsystem initialized.\n");

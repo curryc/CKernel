@@ -247,6 +247,29 @@ namespace CPU
     }
 
 
+    /**
+     * @brief 读取MSR
+     * @param  msr
+     * @return uint32_t 
+     */
+        static inline uint32_t rdmsr(uint32_t msr)
+    {
+        uint32_t low, high;
+        asm volatile("rdmsr" : "=a"(low), "=d"(high) : "c"(msr));
+        return low | (static_cast<uint64_t>(high) << 32);
+    }
+
+    /**
+     * @brief 写MSR
+     * @param  msr
+     * @param  value
+     */
+    static inline void wrmsr(uint32_t msr, uint32_t value)
+    {
+        uint32_t low = value & 0xFFFFFFFF;
+        uint32_t high = (value >> 32) & 0xFFFFFFFF;
+        asm volatile("wrmsr" :: "a"(low), "d"(high), "c"(msr));
+    }
 }
 
 #endif

@@ -148,6 +148,43 @@ bool MULTIBOOT2::get_memory(const iter_data_t *_iter_data, void *_data)
     return true;
 }
 
+
+bool MULTIBOOT2::get_acpi(const iter_data_t *_iter_data, void *_data)
+{
+    if (_iter_data->type != MULTIBOOT2::MULTIBOOT_TAG_TYPE_ACPI_NEW &&
+        _iter_data->type != MULTIBOOT2::MULTIBOOT_TAG_TYPE_ACPI_OLD) {
+        return false;
+    }
+
+    // 设置资源类型和名称
+    resource_t *resource = (resource_t *)_data;
+    resource->type |= resource_t::ACPI;
+    resource->name = (char *)"ACPI Tables";
+    resource->mem.addr = 0x0;
+    resource->mem.len = 0;
+
+    // 获取 ACPI 标签
+    multiboot_tag_old_acpi_t *acpi_old_tag = nullptr;
+    multiboot_tag_new_acpi_t *acpi_new_tag = nullptr;
+
+    if (_iter_data->type == MULTIBOOT2::MULTIBOOT_TAG_TYPE_ACPI_NEW) {
+        acpi_new_tag = (multiboot_tag_new_acpi_t *)_iter_data;
+        resource->acpi.rsdp = (uintptr_t)acpi_new_tag->rsdp;
+        info("multiboot2_get_acpi: Found RSDP (new): 0x%lx\n", resource->acpi.rsdp);
+    } else if (_iter_data->type == MULTIBOOT2::MULTIBOOT_TAG_TYPE_ACPI_OLD) {
+        acpi_old_tag = (multiboot_tag_old_acpi_t *)_iter_data;
+        resource->acpi.rsdp = (uintptr_t)acpi_old_tag->rsdp;
+        info("multiboot2_get_acpi: Found RSDP (old): 0x%lx\n", resource->acpi.rsdp);
+    }
+
+    // 验证 RSDP 地址是否有效
+    if (resource->acpi.rsdp == 0) {
+        err("multiboot2_get_acpi: Invalid RSDP address\n");
+        return false;
+    }
+    return true;
+}
+
 namespace BOOT_INFO
 {
     // 地址
@@ -180,6 +217,22 @@ namespace BOOT_INFO
         resource_t resource;
         
         MULTIBOOT2::get_instance().multiboot2_iter(MULTIBOOT2::get_memory,
+                                                   &resource);
+        return resource;
+    }
+
+
+    resource_t get_acpi(void)
+    {
+        if (!BOOT_INFO::inited) {
+            vga_printf("BOOT_INFO not inited.\n");
+            resource_t empty_resource;
+            return empty_resource;
+        }
+        
+        resource_t resource;
+        
+        MULTIBOOT2::get_instance().multiboot2_iter(MULTIBOOT2::get_acpi,
                                                    &resource);
         return resource;
     }

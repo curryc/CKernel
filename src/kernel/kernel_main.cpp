@@ -10,6 +10,7 @@
 #include "intr.h"   
 #include "boot_info.h"
 #include "cpu.h"
+#include "apic.h"
 
 #include "ctime"
 #include "cstdio"
@@ -90,6 +91,12 @@ void test()
         CPU::halt();
     }
     info("Initialized successfully:interrupts\n");
+
+    // 初始化APIC
+    if (!APIC::get_instance().init()) {
+        err("main:Failed to initialize APIC!\n");
+        CPU::halt();
+    }
 
     // 初始化时钟
     if (!TIMER::get_instance().init()) {

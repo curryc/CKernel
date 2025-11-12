@@ -48,9 +48,5 @@ bool TIMER::init(void) {
     INTERRUPTS::get_instance().enable_irq(INTERRUPTS::IRQ0);
     // 开启中断
     INTERRUPTS::get_instance().enable();
-
-    uint64_t rflags;
-    __asm__ volatile("pushfq; pop %0" : "=r"(rflags));
-    info("EFLAGS: 0x%lx, IF=%d\n", rflags, (rflags & (1 << 9)) ? 1 : 0);
     return true;
 }

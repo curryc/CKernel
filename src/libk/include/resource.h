@@ -22,18 +22,27 @@ struct resource_t
         MEM = 1 << 0,
         /// 中断号
         INTR_NO = 1 << 1,
+        //// ACPI
+        ACPI = 1 << 2,
     };
 
     uint8_t type;
     /// 资源名称
     char *name;
 
-    /// 内存信息
-    struct
-    {
-        uintptr_t addr;
-        size_t len;
-    } mem;
+    union {
+        // 内存信息
+        struct {
+            uintptr_t addr; // 内存起始地址
+            size_t len;     // 内存长度
+        } mem;
+        // ACPI信息
+        struct {
+            uintptr_t rsdp; // RSDP 地址
+        } acpi;
+
+        // 其他资源数据...
+    };
 
     /// 中断号
     uint8_t intr_no;

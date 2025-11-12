@@ -319,14 +319,7 @@ private:
         uint32_t type;
         uint32_t size;
     };
-
 public:
-    /**
-     * @brief 获取单例
-     * @return MULTIBOOT2&      静态对象
-     */
-    static MULTIBOOT2 &get_instance(void);
-
     /**
      * @brief 初始化
      * @return true            成功
@@ -342,6 +335,13 @@ public:
     void multiboot2_iter(bool (*_fun)(const iter_data_t *, void *), void *_data);
 
     /**
+     * @brief 获取单例
+     * @return MULTIBOOT2&      静态对象
+     */
+    static MULTIBOOT2 &get_instance(void);
+
+
+    /**
      * @brief 获取内存信息
      * @param  _iter_data      迭代变量
      * @param  _data           数据
@@ -349,5 +349,14 @@ public:
      * @return false           失败
      */
     static bool get_memory(const iter_data_t *_iter_data, void *_data);
+
+    /**
+     * @brief 获取ACPI信息
+     * @param  _iter_data      迭代变量
+     * @param  _data           数据
+     * @return true            成功
+     * @return false           失败
+     */
+    static bool get_acpi(const iter_data_t *_iter_data, void *_data);
 };
 #endif
