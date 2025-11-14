@@ -10,6 +10,7 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/x86_64/boot/boot.S)
     add_library(boot_grub_x86_64 STATIC 
         x86_64/idt/idt.S 
         x86_64/boot/boot.S
+        x86_64/gdt/gdt.S
     )
     # 设置目标属性
     set_target_properties(boot_grub_x86_64 PROPERTIES
@@ -21,6 +22,7 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/x86_64/boot/boot.S)
         x86_64/src/c_time.cpp
         x86_64/src/c_port.cpp
         x86_64/src/intr.cpp
+        x86_64/src/gdt.cpp
         x86_64/src/timer.cpp
         x86_64/src/port.cpp)
     # 设置目标属性

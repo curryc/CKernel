@@ -93,7 +93,7 @@ multiboot_header:
     .long 8
 multiboot_header_end:
 
-// 临时页表 4KB/页
+// 页表 4KB/页
 .section .data.boot
 .align 0x1000
 pml4:

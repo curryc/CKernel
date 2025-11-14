@@ -14,6 +14,7 @@
 
 #include "ctime"
 #include "cstdio"
+#include "vmm.h"
 
 
 // 声明内核主函数
@@ -84,6 +85,12 @@ void test()
     vga_init();
     info("Initialized successfully:pmm\n");
     // pmm_test();// PMM测试
+
+    // 初始化VMM
+    if (!VMM::get_instance().init()) {
+        err("main:Failed to initialize VMM!\n");
+        CPU::halt();
+    }
 
     // 初始化中断
     if (!INTERRUPTS::get_instance().init()) {

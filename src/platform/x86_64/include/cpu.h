@@ -8,7 +8,9 @@
 #ifndef CKERNEL_CPU_H
 #define CKERNEL_CPU_H
 
-#include "stdint.h"
+#include "cstdint"
+#include "iostream"
+#include "cstdio"
 
 namespace CPU
 {
@@ -22,8 +24,7 @@ namespace CPU
     // Register）的读写（仅在64位模式下存在）。 对控制寄存器的读写是通过MOV
     // CRn指令来实现
 
-    /// PE：CR0的位0是启用保护（Protection
-    // Enable）标志。当设置该位时即开启了保护模式；
+    /// PE：CR0的位0是启用保护（Protection Enable）标志。当设置该位时即开启了保护模式；
     // 当复位时即进入实地址模式。这个标志仅开启段级保护，而并没有启用分页机制。若要启用分页机制，那么PE和PG标志都要置位。
     static constexpr const uint32_t CR0_PE = 0x00000001;
     static constexpr const uint32_t CR0_MP = 0x00000002;
@@ -44,10 +45,9 @@ namespace CPU
     // 引脚用于利用外部逻辑来实现 PC 形式的外部错误报告机制。
     static constexpr const uint32_t CR0_NE = 0x00000020;
 
-    /// WP：对于Intel 80486或以上的CPU，CR0的位16是写保护（Write
-    /// Proctect）标志。
-    // 当设置该标志时，处理器会禁止超级用户程序（例如特权级0的程序）向用户级只读页面执行写操作；当该位复位时则反之。该标志有利于UNIX类操作系统在创建进程时实现写时复制（Copy
-    // on Write）技术。
+    /// WP：对于Intel 80486或以上的CPU，CR0的位16是写保护（Write Proctect）标志。
+    // 当设置该标志时，处理器会禁止超级用户程序（例如特权级0的程序）向用户级只读页面执行写操作；当该位复位时则反之。
+    ///该标志有利于UNIX类操作系统在创建进程时实现写时复制（Copy on Write）技术。
     static constexpr const uint32_t CR0_WP = 0x00010020;
     static constexpr const uint32_t CR0_AM = 0x00040020;
     static constexpr const uint32_t CR0_NW = 0x20000000;
@@ -245,14 +245,60 @@ namespace CPU
     {
         __asm__ volatile("pause" ::: "memory");
     }
+    /**
+     * @brief 设置 页目录
+     * @param  _pgd            要设置的页表
+     * @return true            成功
+     * @return false           失败
+     */
+    inline static bool SET_PGD(uintptr_t _pgd)
+    {
+        __asm__ volatile("mov %0, %%cr3" : : "r"(_pgd));
+        return true;
+    }
 
+    /**
+     * @brief 获取页目录 CR3
+     * @return uintptr_t        CR3 值
+     */
+    inline static uintptr_t GET_PGD(void)
+    {
+        uintptr_t cr3;
+        __asm__ volatile("mov %%cr3, %0" : "=b"(cr3));
+        return cr3;
+    }
+
+    /**
+     * @brief 启用分页
+     * @return true 
+     * @return false 
+     */
+    inline static bool ENABLE_PG(void)
+    {
+        uintptr_t cr0 = 0;
+        __asm__ volatile("mov %%cr0, %0" : "=r"(cr0));
+        // 最高位 PG 位置 1，分页开启
+        cr0 |= (1u << 31);
+        __asm__ volatile("mov %0, %%cr0" : : "r"(cr0));
+        info("paging enabled.\n");
+        return true;
+    }
+    /**
+     * @brief 刷新页表缓存
+     * @param  _addr            要刷新的地址
+     */
+    inline static void VMM_FLUSH(uintptr_t _addr)
+    {
+        __asm__ volatile("invlpg (%0)" : : "r"(_addr) : "memory");
+        return;
+    }
 
     /**
      * @brief 读取MSR
      * @param  msr
-     * @return uint32_t 
+     * @return uint32_t
      */
-        static inline uint32_t rdmsr(uint32_t msr)
+    static inline uint32_t rdmsr(uint32_t msr)
     {
         uint32_t low, high;
         asm volatile("rdmsr" : "=a"(low), "=d"(high) : "c"(msr));
@@ -268,7 +314,7 @@ namespace CPU
     {
         uint32_t low = value & 0xFFFFFFFF;
         uint32_t high = (value >> 32) & 0xFFFFFFFF;
-        asm volatile("wrmsr" :: "a"(low), "d"(high), "c"(msr));
+        asm volatile("wrmsr" ::"a"(low), "d"(high), "c"(msr));
     }
 }
 

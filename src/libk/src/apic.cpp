@@ -8,6 +8,8 @@
 #include "cpu.h"
 #include "port.h"
 #include "boot_info.h"
+#include "cstring"
+#include "cstdio"
 
 void APIC::pic_init()
 {
@@ -92,12 +94,119 @@ void APIC::enable_irq(uint8_t irq_num)
 //     }
 //     return 0;
 // }
+/*  common SDT header  */
+struct acpi_sdt_header {
+    char     signature[4];
+    uint32_t      length;
+    uint8_t       revision;
+    uint8_t       checksum;
+    char     oem_id[6];
+    char     oem_table_id[8];
+    uint32_t      oem_revision;
+    uint32_t      creator_id;
+    uint32_t      creator_revision;
+} __attribute__((packed));
+
+/*  MADT entry types  */
+enum : uint8_t {
+    MADT_LAPIC = 0,
+    MADT_IOAPIC = 1,
+    MADT_IOAPIC_SRC_OVERRIDE = 2,
+    MADT_LAPIC_NMI = 4,
+};
+static void* physmap(uint32_t phys)
+{
+    return (void*)(uint64_t)phys;   // 1:1 mapping in lower 1 GB
+}
+static bool acpi_checksum(const void* data, size_t len)
+{
+    uint8_t sum = 0;
+    const uint8_t* p = (const uint8_t*)data;
+    for (size_t i = 0; i < len; ++i) sum += p[i];
+    return sum == 0;
+}
+void APIC::acpi_init_v1(const uintptr_t rsdp_ptr)
+{
+    const rsdp_v1* rsdp = (const rsdp_v1*)rsdp_ptr;
+
+    if (memcmp(rsdp->signature, "RSD PTR ", 8) != 0) {
+        info("ACPI: RSDP signature bad\n");
+        return;
+    }
+    if (!acpi_checksum(rsdp, sizeof(rsdp_v1))) {
+        info("ACPI: RSDP checksum bad\n");
+        return;
+    }
+
+    uint32_t rsdt_phys = rsdp->rsdt_addr;
+    const acpi_sdt_header* rsdt = (const acpi_sdt_header*)rsdt_phys;
+
+    if (memcmp(rsdt->signature, "RSDT", 4) != 0) {
+        info("ACPI: RSDT signature bad\n");
+        return;
+    }
+    if (!acpi_checksum(rsdt, rsdt->length)) {
+        info("ACPI: RSDT checksum bad\n");
+        return;
+    }
+
+    /* 遍历 RSDT 指针数组找 MADT */
+    uint32_t* entry_ptr = (uint32_t*)((uint8_t*)rsdt + sizeof(acpi_sdt_header));
+    info("hello world\n");
+    uint32_t  entry_cnt = (rsdt->length - sizeof(acpi_sdt_header)) / sizeof(uint32_t);
+
+    const acpi_sdt_header* madt = nullptr;
+    for (uint32_t i = 0; i < entry_cnt; ++i) {
+        const acpi_sdt_header* h = (const acpi_sdt_header*)entry_ptr[i];
+        if (memcmp(h->signature, "APIC", 4) == 0) {
+            madt = h;
+            break;
+        }
+    }
+    if (!madt) {
+        info("ACPI: MADT not found\n");
+        return;
+    }
+    if (!acpi_checksum(madt, madt->length)) {
+        info("ACPI: MADT checksum bad\n");
+        return;
+    }
+
+    info("ACPI: MADT found, length=%u\n", madt->length);
+
+    /* 遍历 MADT entries */
+    const uint8_t* ptr = (const uint8_t*)madt + sizeof(acpi_sdt_header) + 8; // skip local-apic-addr & flags
+    const uint8_t* end = (const uint8_t*)madt + madt->length;
+
+    while (ptr < end) {
+        uint8_t type = *ptr;
+        uint8_t len  = *(ptr + 1);
+
+        if (type == MADT_IOAPIC) {
+            struct ioapic_rec {
+                uint8_t  type;
+                uint8_t  len;
+                uint8_t  ioapic_id;
+                uint8_t  reserved;
+                uint32_t ioapic_addr;   // ← 你要的地址
+                uint32_t gsi_base;
+            } __attribute__((packed));
+            const ioapic_rec* io = (const ioapic_rec*)ptr;
+            info("ACPI: I/O APIC id=%u addr=0x%x gsi_base=%u\n",
+                       io->ioapic_id, io->ioapic_addr, io->gsi_base);
+            /* 这里可以把地址存到全局变量里 */
+        }
+
+        ptr += len;
+    }
+}
 
 /* ---------- 总入口 ---------- */
 bool APIC::init(void) {
     pic_init();
     resource_t resource = BOOT_INFO::get_acpi();
     uintptr_t rsdp_ptr = resource.acpi.rsdp;
+    acpi_init_v1(rsdp_ptr);
     // if (local_init() < 0) return -1;
     // if (io_init () < 0) return -1;
     return true;

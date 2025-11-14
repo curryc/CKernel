@@ -5,8 +5,8 @@
  * @date 2025-10-30
  */
 
-#ifndef SIMPLEKERNEL_GDT_H
-#define SIMPLEKERNEL_GDT_H
+#ifndef CKERNEL_GDT_H
+#define CKERNEL_GDT_H
 
 #include "cpu.h"
 #include "cstdint"
@@ -265,9 +265,8 @@ namespace GDT
      * @brief 初始化
      * @return int32_t         成功返回 0
      * @todo 与 32 位合并
-     * @todo 精简代码
      */
     int32_t init(void);
-}; // namespace GDT
+}; 
 
-#endif /* SIMPLEKERNEL_GDT_H */
+#endif

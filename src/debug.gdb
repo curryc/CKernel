@@ -8,6 +8,7 @@ handle SIGTRAP stop print
 # 设置断点
 break kernel_main
 break intr.cpp:202
+break apic.cpp:142
 
 # 继续执行
 continue
@@ -23,4 +24,11 @@ commands 2
     echo "Hit interrupts::init\n"
     backtrace
     next
+end
+
+commands 3
+    echo "Hit apic::init\n"
+    backtrace
+    print rsdt
+    continue
 end

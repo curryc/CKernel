@@ -69,16 +69,28 @@ private:
     static constexpr uint16_t PIC2_DATA = 0xA1;
 
 private:
+    struct rsdp_v1
+    {
+        char signature[8]; // "RSD PTR "
+        uint8_t checksum;
+        char oem_id[6];
+        uint8_t revision;   // 0 for ACPI 1.0
+        uint32_t rsdt_addr; // 32-bit physical address of RSDT
+    } __attribute__((packed));
+
+private:
     /**
      * @brief 首先初始化本地APIC
-     * @return int 
+     * @return int
      */
     int local_init();
     /**
      * @brief 初始化 IO-APIC
-     * @return int 
+     * @return int
      */
     int io_init();
+
+    void acpi_init_v1(const uintptr_t rsdp);
 };
 
 // MADT
