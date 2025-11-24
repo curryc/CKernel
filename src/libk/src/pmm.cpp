@@ -41,7 +41,7 @@ bool PMM::init(void)
     // 验证获取的内存信息
     if (mem_info.mem.len == 0)
     {
-        vga_printf("PMM init: No memory available!\n");
+        err("PMM init: No memory available!\n");
         return false;
     }
 
@@ -78,7 +78,7 @@ bool PMM::init(void)
     {
         // 将 multiboot2/dtb 信息移动到内核空间
         move_boot_info();
-        vga_printf("pmm init done.\n");
+        info("pmm init done.\n");
         return true;
     }
     else

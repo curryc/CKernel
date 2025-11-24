@@ -30,6 +30,7 @@ private:
     /// 内核映射的页数
     static constexpr const size_t VMM_KERNEL_SPACE_PAGES = VMM_KERNEL_SPACE_SIZE / common::PAGE_SIZE;
 
+public:
 #if defined(__i386__)
     /// P = 1 表示有效； P = 0 表示无效。
     static constexpr const uint8_t VMM_PAGE_VALID = 1 << 0;

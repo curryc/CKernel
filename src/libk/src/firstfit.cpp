@@ -49,12 +49,12 @@ FIRSTFIT::FIRSTFIT(const char* _tag, uintptr_t _addr, size_t _len)
     : ALLOCATOR(_tag, _addr, _len) {
     // 所有清零
     bzero(map, sizeof(map));
-    vga_printf("%s: 0x%p(0x%X pages) init.\n", tag, allocator_start_addr, allocator_length);
+    info("%s: 0x%p(0x%X pages) init.\n", tag, allocator_start_addr, allocator_length);
     return;
 }
 
 FIRSTFIT::~FIRSTFIT(void) {
-    vga_printf("%s finit.\n", tag);
+    info("%s finit.\n", tag);
     return;
 }
 

@@ -8,8 +8,13 @@
 #include "stdint.h"
 #include "io.h"
 #include "vgaprint.h"
+#include "vmm.h"
 
-static uint16_t *const VGA_MEM = (uint16_t *)0xB8000;
+#define VGA_VIRT  0xFFFFFFFF000B8000
+#define VGA_PHYS  0x000B8000
+
+
+static uint16_t* VGA_MEM = (uint16_t *)0xB8000;
 static const int VGA_WIDTH = 80;
 static const int VGA_HEIGHT = 25;
 
@@ -62,8 +67,17 @@ void vga_puts(const char *s)
         vga_putchar(*s++);
 }
 
-void vga_init(void)
+void vga_init(bool virt = false)
 {
+    if (virt)
+    {
+        VMM::get_instance().mmap(
+            VMM::get_instance().get_pgd(),
+            (uintptr_t)VGA_VIRT,
+            (uintptr_t)VGA_PHYS,
+            VMM::VMM_PAGE_VALID | VMM::VMM_PAGE_WRITABLE);
+        VGA_MEM = (uint16_t*)VGA_VIRT;
+    }
     for (int i = 0; i < VGA_WIDTH * VGA_HEIGHT; ++i)
         VGA_MEM[i] = vga_entry(' ', current_color);
     cursor_x = cursor_y = 0;

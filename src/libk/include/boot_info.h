@@ -59,5 +59,11 @@ namespace BOOT_INFO
      * @return resource_t 
      */
     extern resource_t get_acpi(void);
+
+    /**
+     * @brief Get the framebuffer object
+     * @return resource_t 
+     */
+    resource_t get_framebuffer(void);
 }; // namespace BOOT_INFO
 #endif

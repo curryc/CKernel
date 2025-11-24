@@ -198,6 +198,9 @@ private:
         uint32_t part;
     };
 
+    /**
+     * @brief 内存信息
+     */
     struct multiboot_tag_mmap_t : multiboot_tag_t
     {
         uint32_t entry_size;
@@ -205,10 +208,37 @@ private:
         multiboot_mmap_entry_t entries[0];
     };
 
-
-
-
-
+    /**
+     * @brief 帧缓冲信息
+     */
+    struct multiboot_tag_framebuffer : multiboot_tag_t
+    {
+        uint64_t framebuffer_addr;   /* 显存物理基址 */
+        uint32_t framebuffer_pitch;  /* 每行字节数 */
+        uint32_t framebuffer_width;  /* 像素列数 */
+        uint32_t framebuffer_height; /* 像素行数 */
+        uint8_t framebuffer_bpp;     /* 每像素位数（色深） */
+        uint8_t framebuffer_type;    /* 0=索引色 1=RGB 2=文本模式 */
+        uint8_t reserved;            /* 保留，必须为 0 */
+        /* 如果 framebuffer_type == 1（RGB），后面还有 6 字节颜色掩码 */
+        union
+        {
+            struct
+            { /* RGB 模式 */
+                uint8_t red_field_position;
+                uint8_t red_mask_size;
+                uint8_t green_field_position;
+                uint8_t green_mask_size;
+                uint8_t blue_field_position;
+                uint8_t blue_mask_size;
+            } rgb;
+            struct
+            { /* 索引色模式 */
+                uint16_t framebuffer_palette_num_colors;
+                /* 后面紧跟着 palette，每个颜色 3 字节（RGB888） */
+            } indexed;
+        } u;
+    };
 
     struct multiboot_vbe_info_block_t
     {
@@ -272,11 +302,17 @@ private:
         uint8_t tables[0];
     };
 
+    /**
+     * @brief ACPI 1.0/1.1 table
+     */
     struct multiboot_tag_old_acpi_t : multiboot_tag_t
     {
         uint8_t rsdp[0];
     };
 
+    /**
+     * @brief ACPI 2.0 table
+     */
     struct multiboot_tag_new_acpi_t : multiboot_tag_t
     {
         uint8_t rsdp[0];
@@ -358,5 +394,14 @@ public:
      * @return false           失败
      */
     static bool get_acpi(const iter_data_t *_iter_data, void *_data);
+
+    /**
+     * @brief 获取文字用户界面信息
+     * @param  _iter_data
+     * @param  _data
+     * @return true 
+     * @return false 
+     */
+    static bool get_framebuffer(const iter_data_t *_iter_data, void *_data);
 };
 #endif

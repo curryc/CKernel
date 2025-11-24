@@ -53,32 +53,29 @@ public:
 class TUI {
 private:
     /// CRT 控制寄存器-地址
-    static constexpr const uint32_t TUI_ADDR     = 0x3D4;
+    static constexpr const uint32_t TUI_ADDR        = 0x3D4;
     /// CRT 控制寄存器-数据
-    static constexpr const uint32_t TUI_DATA     = 0x3D5;
+    static constexpr const uint32_t TUI_DATA        = 0x3D5;
     /// 光标高位
-    static constexpr const uint32_t TUI_CURSOR_H = 0xE;
+    static constexpr const uint32_t TUI_CURSOR_H    = 0xE;
     /// 光标低位
-    static constexpr const uint32_t TUI_CURSOR_L = 0xF;
-    /// TUI 缓存基址
-    /// @todo 从 grub 获取
-    static constexpr const uint32_t TUI_MEM_BASE = 0xB8000;
-    /// TUI 缓存大小
-    /// @todo 从 grub 获取
-    static constexpr size_t         TUI_MEM_SIZE = 0x8000;
-    /// 规定显示行数
-    /// @todo 从 grub 获取
-    static constexpr const size_t   WIDTH        = 80;
-    /// 规定显示列数
-    /// @todo 从 grub 获取
-    static constexpr const size_t   HEIGHT       = 25;
-    // TUI 缓存
-    char_t* const                   buffer       = (char_t*)TUI_MEM_BASE;
-
+    static constexpr const uint32_t TUI_CURSOR_L    = 0xF;
     /// 记录当前位置
     static pos_t                    pos;
     /// 记录当前命令行颜色
     static col_t                    color;
+
+    // 以下从bootinfo中获取
+    /// TUI 缓存基址
+    uint32_t TUI_MEM_BASE = 0xB8000;
+    /// TUI 缓存大小
+    size_t TUI_MEM_SIZE = 0x8000;
+    /// 规定显示行数
+    size_t TUI_WIDTH = 80;
+    /// 规定显示列数
+    size_t TUI_HEIGHT = 25;
+    // TUI 缓存
+    char_t* buffer = (char_t *)TUI_MEM_BASE;
 
     /**
      * @brief 在指定位置输出
@@ -108,6 +105,11 @@ protected:
 public:
     TUI(void);
     ~TUI(void);
+
+    /**
+     * @brief 初始化
+     */
+    void init(void);
 
     /**
      * @brief Set the color object

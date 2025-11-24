@@ -24,6 +24,8 @@ struct resource_t
         INTR_NO = 1 << 1,
         //// ACPI
         ACPI = 1 << 2,
+        //// 
+        FRAMEBUFFER = 1 << 3,
     };
 
     uint8_t type;
@@ -37,9 +39,22 @@ struct resource_t
             size_t len;     // 内存长度
         } mem;
         // ACPI信息
-        struct {
+        struct
+        {
             uintptr_t rsdp; // RSDP 地址
         } acpi;
+        // 帧缓冲信息
+        struct
+        {
+            uint64_t base;   // 显存物理基址
+            uint64_t size;   // 整个缓冲区字节数
+            uint32_t width;  // 像素列数
+            uint32_t height; // 像素行数
+            uint32_t pitch;  // 每行字节数
+            uint8_t bpp;     // 色深
+            uint32_t cols;   // 字符列数
+            uint32_t rows;   // 字符行数
+        } fb_info_t;
 
         // 其他资源数据...
     };

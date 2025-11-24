@@ -280,7 +280,6 @@ namespace CPU
         // 最高位 PG 位置 1，分页开启
         cr0 |= (1u << 31);
         __asm__ volatile("mov %0, %%cr0" : : "r"(cr0));
-        info("paging enabled.\n");
         return true;
     }
     /**

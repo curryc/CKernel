@@ -12,7 +12,7 @@
 #include "cstring"
 #include "cstdio"
 #ifndef __riscv
-#    include "port.h"
+#include "port.h"
 #endif
 
 // 根据不同架构选择不同的输出方式
@@ -26,13 +26,13 @@
 class IO
 {
 private:
+    IO();
+
     // io 对象
 #if defined(__i386__) || defined(__x86_64__)
     // x86 平台使用 TUI 接口
     TUI io;
 #endif
-
-protected:
 public:
     /// 缓冲区大小
     static constexpr const size_t BUF_SIZE = 512;
@@ -42,6 +42,11 @@ public:
      * @return IO&              静态对象
      */
     static IO &get_instance(void);
+
+    /**
+     * @brief 初始化
+     */
+    void init(void);
 
     /**
      * @brief 端口读字节

@@ -7,19 +7,30 @@
 #include "io.h"
 
 /// 定义全局 IO 对象
-static IO io_instance;
 IO& IO::get_instance(void) {
+    /// 定义全局 IO 对象
+    static IO io_instance;
     return io_instance;
 }
-uint8_t IO::inb(const uint32_t port) {
+
+IO::IO(void)
+{
+}
+void IO::init(void){
+    io.init();
+}
+uint8_t IO::inb(const uint32_t port)
+{
     return PORT::port_inb(port);
 }
 
-uint16_t IO::inw(const uint32_t port) {
+uint16_t IO::inw(const uint32_t port)
+{
     return PORT::port_inw(port);
 }
 
-uint32_t IO::ind(const uint32_t port) {
+uint32_t IO::ind(const uint32_t port)
+{
     return PORT::port_ind(port);
 }
 

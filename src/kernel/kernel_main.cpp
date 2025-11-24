@@ -11,6 +11,7 @@
 #include "boot_info.h"
 #include "cpu.h"
 #include "apic.h"
+#include "io.h"
 
 #include "ctime"
 #include "cstdio"
@@ -70,20 +71,16 @@ extern "C" void kernel_main();
 void test()
 {
     // 内核信息初始化
-
     if (!BOOT_INFO::init()) {
-        vga_printf("main:Failed to initialize boot info!\n");
+        err("main:Failed to initialize boot info!\n");
         CPU::halt();
     }
 
     // 初始化PMM
     if (!PMM::get_instance().init()) {
-        vga_printf("main:Failed to initialize PMM!\n");
+        err("main:Failed to initialize PMM!\n");
         CPU::halt();
     }
-    // 清屏，开始使用TUI
-    vga_init();
-    info("Initialized successfully:pmm\n");
     // pmm_test();// PMM测试
 
     // 初始化VMM
@@ -91,6 +88,10 @@ void test()
         err("main:Failed to initialize VMM!\n");
         CPU::halt();
     }
+    // 
+    IO::get_instance().init();
+
+    info("Initialized successfully:vmm\n");
 
     // 初始化中断
     if (!INTERRUPTS::get_instance().init()) {
@@ -115,7 +116,7 @@ void test()
 
 void test_vga()
 {
-    vga_init();
+    vga_init(false);
     vga_setcolor(VGA_WHITE);
     vga_printf("Hello from CKERNEL!!\n");
     return;

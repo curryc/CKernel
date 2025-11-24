@@ -18,37 +18,37 @@ MULTIBOOT2 &MULTIBOOT2::get_instance(void)
 
 bool MULTIBOOT2::multiboot2_init(void)
 {
-    vga_printf("multiboot2_init: Starting initialization...\n");
-    vga_printf("multiboot2_init: Magic number: 0x%lx\n", BOOT_INFO::multiboot2_magic);
+    info("multiboot2_init: Starting initialization...\n");
+    info("multiboot2_init: Magic number: 0x%lx\n", BOOT_INFO::multiboot2_magic);
     uintptr_t addr = BOOT_INFO::boot_info_addr;
-    vga_printf("multiboot2_init: Boot info addr: 0x%lx\n", addr);
+    info("multiboot2_init: Boot info addr: 0x%lx\n", addr);
     
     // 判断魔数是否正确
     if (BOOT_INFO::multiboot2_magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
-        vga_printf("multiboot2_init: Invalid magic number! Expected: 0x%x, Got: 0x%lx\n", 
+        err("multiboot2_init: Invalid magic number! Expected: 0x%x, Got: 0x%lx\n", 
                    MULTIBOOT2_BOOTLOADER_MAGIC, BOOT_INFO::multiboot2_magic);
         return false;
     }
     
     // 修复地址对齐检查
     if ((addr & 7) != 0) {
-        vga_printf("multiboot2_init: Address not aligned! addr=0x%lx\n", addr);
+        err("multiboot2_init: Address not aligned! addr=0x%lx\n", addr);
         return false;
     }
     
     // 空指针检查
     if (addr == 0) {
-        vga_printf("multiboot2_init: Boot info address is NULL!\n");
+        err("multiboot2_init: Boot info address is NULL!\n");
         return false;
     }
     
     // 检查地址是否在合理的内存范围内
     if (addr < 0x100000 || addr > 0x1000000) {  // 1MB到16MB之间
-        vga_printf("multiboot2_init: Boot info address out of range! addr=0x%lx\n", addr);
+        err("multiboot2_init: Boot info address out of range! addr=0x%lx\n", addr);
         return false;
     }
     
-    vga_printf("multiboot2_init: Reading boot info size...\n");
+    info("multiboot2_init: Reading boot info size...\n");
     
     // 内存读取 - 逐字节读取
     uint32_t size = 0;
@@ -58,16 +58,16 @@ bool MULTIBOOT2::multiboot2_init(void)
     }
     
     BOOT_INFO::boot_info_size = size;
-    vga_printf("multiboot2_init: Boot info size: %d bytes\n", BOOT_INFO::boot_info_size);
-    vga_printf("multiboot2_init: Boot info end: 0x%lx\n", BOOT_INFO::boot_info_addr + BOOT_INFO::boot_info_size);
+    info("multiboot2_init: Boot info size: %d bytes\n", BOOT_INFO::boot_info_size);
+    info("multiboot2_init: Boot info end: 0x%lx\n", BOOT_INFO::boot_info_addr + BOOT_INFO::boot_info_size);
     
     // 验证大小是否合理
     if (BOOT_INFO::boot_info_size < 8 || BOOT_INFO::boot_info_size > 65536) {
-        vga_printf("multiboot2_init: Boot info size unreasonable: %d\n", BOOT_INFO::boot_info_size);
+        info("multiboot2_init: Boot info size unreasonable: %d\n", BOOT_INFO::boot_info_size);
         return false;
     }
     
-    vga_printf("multiboot2_init: Initialization successful!\n");
+    info("multiboot2_init: Initialization successful!\n");
     return true;
 }
 
@@ -90,7 +90,7 @@ bool MULTIBOOT2::get_memory(const iter_data_t *_iter_data, void *_data)
         return false;
     }
 
-    vga_printf("multiboot2_get_memory: Memory tag found\n");
+    info("multiboot2_get_memory: Memory tag found\n");
 
     resource_t *resource = (resource_t *)_data;
     resource->type |= resource_t::MEM;
@@ -105,11 +105,11 @@ bool MULTIBOOT2::get_memory(const iter_data_t *_iter_data, void *_data)
     uint8_t *tag_end = (uint8_t*)mmap_tag + tag_size;
     uint32_t entry_size = mmap_tag->entry_size;
 
-    vga_printf("multiboot2_get_memory: Tag size: %d, Entry size: %d\n", tag_size, entry_size);
+    info("multiboot2_get_memory: Tag size: %d, Entry size: %d\n", tag_size, entry_size);
 
     // 验证基本参数
     if (entry_size == 0 || tag_size < sizeof(multiboot_tag_mmap_t)) {
-        vga_printf("multiboot2_get_memory: Invalid mmap tag parameters\n");
+        err("multiboot2_get_memory: Invalid mmap tag parameters\n");
         return false;
     }
 
@@ -124,7 +124,7 @@ bool MULTIBOOT2::get_memory(const iter_data_t *_iter_data, void *_data)
     for (size_t i = 0; i < max_entries; i++) {
         // 检查是否还有足够的空间读取完整的条目
         if ((uint8_t*)mmap + sizeof(MULTIBOOT2::multiboot_mmap_entry_t) > tag_end) {
-            vga_printf("multiboot2_get_memory: Reached tag boundary, stopping\n");
+            err("multiboot2_get_memory: Reached tag boundary, stopping\n");
             break;
         }
 
@@ -143,7 +143,7 @@ bool MULTIBOOT2::get_memory(const iter_data_t *_iter_data, void *_data)
         mmap = (multiboot_mmap_entry_t*)((uint8_t*)mmap + entry_size);
     }
 
-    vga_printf("multiboot2_get_memory: Total available memory: %u bytes\n", resource->mem.len);
+    info("multiboot2_get_memory: Total available memory: %u bytes\n", resource->mem.len);
     
     return true;
 }
@@ -185,6 +185,46 @@ bool MULTIBOOT2::get_acpi(const iter_data_t *_iter_data, void *_data)
     return true;
 }
 
+bool MULTIBOOT2::get_framebuffer(const iter_data_t *_iter_data, void *_data)
+{
+    if (_iter_data->type != MULTIBOOT2::MULTIBOOT_TAG_TYPE_FRAMEBUFFER) {
+        return false;
+    }
+
+    // 设置资源类型和名称
+    resource_t *resource = (resource_t *)_data;
+    resource->type |= resource_t::FRAMEBUFFER;
+    resource->name = (char *)"Framebuffer";
+    resource->mem.addr = 0x0;
+    resource->mem.len = 0;
+
+    // 获取 ACPI 标签
+    multiboot_tag_framebuffer *framebuffer_tag = (multiboot_tag_framebuffer *)_iter_data;
+
+    resource->fb_info_t.base = framebuffer_tag->framebuffer_addr;
+    resource->fb_info_t.width = framebuffer_tag->framebuffer_width;
+    resource->fb_info_t.height = framebuffer_tag->framebuffer_height;
+    resource->fb_info_t.pitch = framebuffer_tag->framebuffer_pitch;
+    resource->fb_info_t.bpp = framebuffer_tag->framebuffer_bpp;
+
+    /* 计算缓冲区总大小 */
+    resource->fb_info_t.size = resource->fb_info_t.pitch * resource->fb_info_t.height;
+
+    /* 如果是文本模式（bpp=16 且 addr=0xB8000） */
+    if (resource->fb_info_t.bpp == 16 && resource->fb_info_t.base == 0xB8000)
+    {
+        resource->fb_info_t.cols = 80; // 标准 VGA 文本
+        resource->fb_info_t.rows = 25;
+    }
+    else
+    { // 图形模式，按 8×16 字体估算
+        resource->fb_info_t.cols = resource->fb_info_t.width / 8;
+        resource->fb_info_t.rows = resource->fb_info_t.height / 16;
+    }
+
+    return true;
+}
+
 namespace BOOT_INFO
 {
     // 地址
@@ -209,7 +249,7 @@ namespace BOOT_INFO
     resource_t get_memory(void)
     {
         if (!BOOT_INFO::inited) {
-            vga_printf("BOOT_INFO not inited.\n");
+            info("BOOT_INFO not inited.\n");
             resource_t empty_resource;
             return empty_resource;
         }
@@ -225,7 +265,7 @@ namespace BOOT_INFO
     resource_t get_acpi(void)
     {
         if (!BOOT_INFO::inited) {
-            vga_printf("BOOT_INFO not inited.\n");
+            info("BOOT_INFO not inited.\n");
             resource_t empty_resource;
             return empty_resource;
         }
@@ -233,6 +273,20 @@ namespace BOOT_INFO
         resource_t resource;
         
         MULTIBOOT2::get_instance().multiboot2_iter(MULTIBOOT2::get_acpi,
+                                                   &resource);
+        return resource;
+    }
+
+    resource_t get_framebuffer(void){
+        if (!BOOT_INFO::inited) {
+            info("BOOT_INFO not inited.\n");
+            resource_t empty_resource;
+            return empty_resource;
+        }
+        
+        resource_t resource;
+        
+        MULTIBOOT2::get_instance().multiboot2_iter(MULTIBOOT2::get_framebuffer,
                                                    &resource);
         return resource;
     }

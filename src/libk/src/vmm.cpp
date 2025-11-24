@@ -9,13 +9,14 @@
 #include "cassert"
 #include "cpu.h"
 #include "cstdint"
-#include "cstdio"
+// #include "cstdio"
 #include "cstring"
 #if defined(__i386__) || defined(__x86_64__)
 #    include "gdt.h"
 #endif
 #include "pmm.h"
 #include "vmm.h"
+#include "boot_info.h"
 
 VMM& VMM::get_instance(void) {
     /// 定义全局 VMM 对象
@@ -36,17 +37,18 @@ bool VMM::init(void) {
     for (uintptr_t addr = (uintptr_t)common::KERNEL_START_ADDR;
          addr < (uintptr_t)common::KERNEL_START_ADDR + VMM_KERNEL_SPACE_SIZE;
          addr += common::PAGE_SIZE) {
-        // TODO: 区分代码/数据等段分别映射
+        // 内核空间直接恒等映射
         mmap(pgd_kernel, addr, addr,
              VMM_PAGE_READABLE | VMM_PAGE_WRITABLE | VMM_PAGE_EXECUTABLE);
     }
     // 设置页目录
-    set_pgd(pgd_kernel);
+    // set_pgd(pgd_kernel);
     // 开启分页
-    CPU::ENABLE_PG();
-    info("vmm init.\n");
-    return 0;
+    // CPU::ENABLE_PG();
+    // info("vmm init.\n");
+    return true;
 }
+
 
 pte_t* VMM::find(const pt_t _pgd, uintptr_t _va, bool _alloc) {
     pt_t pgd = _pgd;
@@ -101,7 +103,7 @@ void VMM::mmap(const pt_t _pgd, uintptr_t _va, uintptr_t _pa, uint32_t _flag) {
     // 已经映射过了 且 flag 没有变化
     if (((*pte & VMM_PAGE_VALID) == VMM_PAGE_VALID)
         && ((*pte & ((1 << VMM_PTE_PROP_BITS) - 1)) == _flag)) {
-        warn("remap.\n");
+        // warn("remap.\n");
     }
     // 没有映射，或更改了 flag
     else {
