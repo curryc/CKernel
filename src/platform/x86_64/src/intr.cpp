@@ -118,7 +118,6 @@ extern "C"
      */
     void isr_handler(uint8_t irq_num, INTERRUPTS::intr_context_t *context, uint64_t err_code)
     {
-
         // info("RIP: 0x%lx  CS: 0x%lx  RFLAGS: 0x%lx\n", context->rip, context->cs, context->rflags);
         INTERRUPTS::get_instance().call_isr(irq_num, context);
     }
@@ -133,9 +132,9 @@ extern "C"
         INTERRUPTS::get_instance().call_irq(irq_num, context);
     }
 }
-static void handler_default(uint8_t intr_num, INTERRUPTS::intr_context_t *)
+static void handler_default(uint8_t intr_num, INTERRUPTS::intr_context_t * ctx)
 {
-    info("Unhandled interrupt %d!", intr_num);
+    info("Unhandled interrupt %d!\n", intr_num);
     while (1)
     {
         ;
@@ -157,34 +156,13 @@ INTERRUPTS &INTERRUPTS::get_instance(void)
     return intr;
 }
 
-void INTERRUPTS::pic_init()
-{
-    /* ICW1：级联，需要 ICW4 */
-    PORT::port_outb(PIC1_COMMAND, 0x11);
-    PORT::port_outb(PIC2_COMMAND, 0x11);
-
-    /* ICW2：中断向量偏移 0x20 / 0x28 */
-    PORT::port_outb(PIC1_DATA, 0x20);
-    PORT::port_outb(PIC2_DATA, 0x28);
-
-    /* ICW3：主片 IRQ2 级联从片；从片 ID=2 */
-    PORT::port_outb(PIC1_DATA, 0x04);
-    PORT::port_outb(PIC2_DATA, 0x02);
-
-    /* ICW4：8086 模式 */
-    PORT::port_outb(PIC1_DATA, 0x01);
-    PORT::port_outb(PIC2_DATA, 0x01);
-
-    /* 屏蔽所有 IRQ*/
-    PORT::port_outb(PIC1_DATA, 0xFF);
-    PORT::port_outb(PIC2_DATA, 0xFF);
-}
-
 /* ---------- 构造 IDT 表项 ---------- */
 void INTERRUPTS::make_idt_entry(uint8_t vec, void (*handler)(), uint8_t type, uint8_t dpl, uint8_t _p)
 {
     uint64_t addr = reinterpret_cast<uint64_t>(handler);
     idt[vec].offset_low = addr & 0xFFFF;
+    idt[vec].offset_mid = (addr >> 16) & 0xFFFF;
+    idt[vec].offset_high = (addr >> 32) & 0xFFFFFFFF;
     idt[vec].selector = 0x08; // 假设平坦模型代码段
     idt[vec].ist = 0;
     idt[vec].zero0 = 0;
@@ -192,8 +170,6 @@ void INTERRUPTS::make_idt_entry(uint8_t vec, void (*handler)(), uint8_t type, ui
     idt[vec].zero1 = 0;
     idt[vec].dpl = dpl;
     idt[vec].p = _p;
-    idt[vec].offset_mid = (addr >> 16) & 0xFFFF;
-    idt[vec].offset_high = (addr >> 32) & 0xFFFFFFFF;
     idt[vec].reserved = 0;
 }
 
@@ -264,7 +240,7 @@ bool INTERRUPTS::init()
 #undef SET_IRQ
 
     // 统一指向默认桩
-    for (uint32_t i = 0; i < INTERRUPT_MAX; i++)
+    for (uint32_t i = 0; i < EXCP_MAX; i++)
     {
         register_intr_handler(i, handler_default);
     }
@@ -279,7 +255,7 @@ bool INTERRUPTS::init()
     }
 
     // 初始化 APIC
-    pic_init();
+    // apic_init();
 
     // info("Interrupt subsystem initialized.\n");
     return true;
@@ -304,23 +280,6 @@ int32_t INTERRUPTS::call_irq(uint8_t _no, intr_context_t* _intr_context)
     return -1; // 未找到处理函数
 }
 
-void INTERRUPTS::enable_irq(uint8_t irq_num) {
-    uint16_t port;
-    uint8_t mask;
-
-    irq_num = irq_num - 32;
-    if (irq_num >= 8) {
-        port = PIC2_DATA;
-        irq_num -= 8;
-    } else {
-        port = PIC1_DATA;
-    }
-
-    mask = PORT::port_inb(port);
-    mask &= ~(1 << irq_num);
-    PORT::port_outb(port, mask);
-}
-
 
 void INTERRUPTS::enable() { 
     __asm__ volatile("sti"); 
@@ -335,9 +294,9 @@ void INTERRUPTS::register_intr_handler(uint8_t intr_num, intr_handler_t handler)
     return;
 }
 
-void INTERRUPTS::send_eoi(uint8_t irq_num)
-{
-    if (irq_num >= 8)
-        PORT::port_outb(PIC2_COMMAND, PIC_EOI);
-    PORT::port_outb(PIC1_COMMAND, PIC_EOI);
-}
+// void INTERRUPTS::send_eoi(uint8_t irq_num)
+// {
+//     if (irq_num >= 8)
+//         PORT::port_outb(PIC2_COMMAND, PIC_EOI);
+//     PORT::port_outb(PIC1_COMMAND, PIC_EOI);
+// }

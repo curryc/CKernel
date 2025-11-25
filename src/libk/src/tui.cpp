@@ -62,6 +62,16 @@ void TUI::init(void)
     TUI_WIDTH = fb.fb_info_t.width;
     TUI_HEIGHT = fb.fb_info_t.height;
     buffer = (char_t *)TUI_MEM_BASE;
+    // 映射base内存，因为它在前1MB中，没有在内核空间中被映射
+    for (uint64_t pa = 0; pa < 0x100000; pa += 0x1000)
+        VMM::get_instance().mmap(VMM::get_instance().get_pgd(), pa, pa,
+                                 VMM::VMM_PAGE_VALID |
+                                     VMM::VMM_PAGE_WRITABLE |
+                                     VMM::VMM_PAGE_EXECUTABLE);
+
+    // VMM::get_instance().mmap(VMM::get_instance().get_pgd(), TUI_MEM_BASE, TUI_MEM_BASE,
+    //                          VMM::VMM_PAGE_VALID | VMM::VMM_PAGE_READABLE |
+    //                              VMM::VMM_PAGE_WRITABLE);
     return;
 }
 TUI::~TUI(void)

@@ -42,10 +42,9 @@ bool VMM::init(void) {
              VMM_PAGE_READABLE | VMM_PAGE_WRITABLE | VMM_PAGE_EXECUTABLE);
     }
     // 设置页目录
-    // set_pgd(pgd_kernel);
+    set_pgd(pgd_kernel);
     // 开启分页
-    // CPU::ENABLE_PG();
-    // info("vmm init.\n");
+    CPU::ENABLE_PG();
     return true;
 }
 

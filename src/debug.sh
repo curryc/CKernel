@@ -8,7 +8,9 @@ OPTS="-cdrom ./build/grub/kernel.iso \
       -no-reboot \
       -no-shutdown \
       -d int,cpu_reset,guest_errors \
-      -gdb tcp::1234"
+      -gdb tcp::1234 \
+      -no-reboot \
+      -no-shutdown"
 
 # 启动 QEMU
 echo "Starting QEMU with serial + gdbstub..."

@@ -35,12 +35,14 @@ namespace common
     static constexpr const size_t GB = 0x40000000;
     /// 页大小 4KB
     static constexpr const size_t PAGE_SIZE = 4 * KB;
-    /// 内核空间占用大小，包括内核代码部分与预留的，8MB
-    static constexpr const uint32_t KERNEL_SPACE_SIZE = 8 * MB;
+    /// 内核空间占用大小，包括内核代码部分与预留的，8MB，在调试阶段直接映射128MB，把固件页映射进来
+    static constexpr const uint32_t KERNEL_SPACE_SIZE = 128 * MB;
     /// 映射内核空间需要的页数
     static constexpr const uint64_t KERNEL_SPACE_PAGES = KERNEL_SPACE_SIZE / PAGE_SIZE;
     /// 栈大小
     static constexpr const uintptr_t STACK_SIZE = 4 * KB;
+    /// 系统默认频率
+    static constexpr const uint32_t DEFAULT_SYS_FREQ = 1000;
 
     // 页掩码
     static constexpr const uintptr_t PAGE_MASK = ~(PAGE_SIZE - 1);

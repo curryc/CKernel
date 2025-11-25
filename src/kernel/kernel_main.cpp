@@ -90,7 +90,6 @@ void test()
     }
     // 
     IO::get_instance().init();
-
     info("Initialized successfully:vmm\n");
 
     // 初始化中断
@@ -105,6 +104,7 @@ void test()
         err("main:Failed to initialize APIC!\n");
         CPU::halt();
     }
+    info("Initialized successfully:APIC\n");
 
     // 初始化时钟
     if (!TIMER::get_instance().init()) {
@@ -130,6 +130,5 @@ void kernel_main()
     test_vga();
     test();
 
-
-    CPU::halt();
+    // CPU::halt();
 }

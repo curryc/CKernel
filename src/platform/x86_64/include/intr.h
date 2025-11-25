@@ -69,19 +69,44 @@ public:
     };
 private:
     // IDT条目结构 (符合x86_64规范)
-    struct idt_entry_t
-    {
-        uint16_t offset_low;  // 偏移低16位
-        uint16_t selector;    // 代码段选择子
-        uint64_t ist : 3;     // 中断栈表
-        uint64_t zero0 : 5;   // 填充 0
-        uint64_t type : 4;    // 类型
-        uint64_t zero1 : 1;   // 填充 0
-        uint64_t dpl : 2;     // 权限
-        uint64_t p : 1;       // 存在位
-        uint16_t offset_mid;  // 偏移中16位
-        uint32_t offset_high; // 偏移高32位
-        uint32_t reserved;    // 保留必须为0
+    // struct idt_entry_t
+    // {
+    //     uint16_t offset_low;  // 偏移低16位
+    //     uint16_t selector;    // 代码段选择子
+    //     uint64_t ist : 3;     // 中断栈表
+    //     uint64_t zero0 : 5;   // 填充 0
+    //     uint64_t type : 4;    // 类型
+    //     uint64_t zero1 : 1;   // 填充 0
+    //     uint64_t dpl : 2;     // 权限
+    //     uint64_t p : 1;       // 存在位
+    //     uint16_t offset_mid;  // 偏移中16位
+    //     uint32_t offset_high; // 偏移高32位
+    //     uint32_t reserved;    // 保留必须为0
+    // } __attribute__((packed));
+    struct idt_entry_t {
+        // 低位地址
+        uint64_t offset_low  : 16;
+        // 选择子
+        uint64_t selector : 16;
+        // 中断栈表
+        // 64-ia-32-architectures-software-developer-vol-3a-manual#6.14.5
+        uint64_t ist      : 3;
+        // 填充 0
+        uint64_t zero0    : 5;
+        // 类型
+        uint64_t type     : 4;
+        // 填充 0
+        uint64_t zero1    : 1;
+        // 权限
+        uint64_t dpl      : 2;
+        // 存在位
+        uint64_t p        : 1;
+        // 中段地址
+        uint64_t offset_mid  : 16;
+        // 高位地址
+        uint64_t offset_high  : 32;
+        // 保留
+        uint64_t reserved : 32;
     } __attribute__((packed));
 
     // IDTR结构
@@ -100,12 +125,6 @@ private:
     static constexpr const uint32_t    IO_PIC2C      = IO_PIC2 + 1;
     /// End-of-interrupt command code
     static constexpr const uint32_t    PIC_EOI       = 0x20;
-
-    /* ---------- PIC 端口 ---------- */
-    static constexpr uint16_t PIC1_COMMAND = 0x20;
-    static constexpr uint16_t PIC1_DATA = 0x21;
-    static constexpr uint16_t PIC2_COMMAND = 0xA0;
-    static constexpr uint16_t PIC2_DATA = 0xA1;
 public:
     // IRQ
     // 电脑系统计时器
@@ -163,7 +182,7 @@ public:
      * @brief 启用特定中断
      * @param  irq_num
      */
-    void enable_irq(uint8_t irq_num);
+    void enable_irq(uint8_t gsi);
 
     /**
      * @brief 禁用中断
