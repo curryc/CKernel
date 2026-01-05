@@ -5,6 +5,7 @@ QEMU="qemu-system-x86_64"
 OPTS="-cdrom ./build/grub/kernel.iso \
       -m 128M \
       -serial mon:stdio \
+      -enable-kvm \
       -no-reboot \
       -no-shutdown \
       -d int,cpu_reset,guest_errors \

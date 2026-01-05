@@ -16,11 +16,11 @@ static volatile uint64_t g_ticks = 0;
 void timer_intr(uint8_t, INTERRUPTS::intr_context_t *)
 {
     ++g_ticks;
+    INTERRUPTS::get_instance().send_eoi(INTERRUPTS::IRQ0);
     if (g_ticks % 1000 == 0)
     {
         info("1 second tick\n");
     }
-    INTERRUPTS::get_instance().send_eoi(INTERRUPTS::IRQ0);
     return;
 }
 

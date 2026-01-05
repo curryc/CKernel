@@ -18,7 +18,7 @@
 namespace GDT
 {
     /// 全局描述符表长度
-    static constexpr const uint32_t GDT_LENGTH = 5;
+    static constexpr const uint32_t GDT_LENGTH = 7;
     /// 各个内存段所在全局描述符表下标
     static constexpr const uint32_t GDT_NULL = 0;
     /// 内核代码段
@@ -29,6 +29,10 @@ namespace GDT
     static constexpr const uint32_t GDT_USER_CODE = 3;
     /// 用户数据段
     static constexpr const uint32_t GDT_USER_DATA = 4;
+    // TSS
+    static constexpr uint32_t GDT_TSS_LOW = 5;
+    // TSS 高
+    static constexpr uint32_t GDT_TSS_HIGH = 6;
     /// 内核代码段选择子 0x08
     static constexpr const uint32_t SEG_KERNEL_CODE = GDT_KERNEL_CODE << 3;
     /// 内核数据段选择子

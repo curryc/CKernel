@@ -118,7 +118,12 @@ extern "C"
      */
     void isr_handler(uint8_t irq_num, INTERRUPTS::intr_context_t *context, uint64_t err_code)
     {
-        // info("RIP: 0x%lx  CS: 0x%lx  RFLAGS: 0x%lx\n", context->rip, context->cs, context->rflags);
+        // info(">>> IRQ%d  RSP=%p RIP=%p CS=%p FLAGS=%p\n",
+        //      irq_num,
+        //      (void *)context->rsp,
+        //      (void *)context->rip,
+        //      (void *)context->cs,
+        //      (void *)context->rflags);
         INTERRUPTS::get_instance().call_isr(irq_num, context);
     }
 
@@ -129,19 +134,27 @@ extern "C"
      */
     void irq_handler(uint8_t irq_num, INTERRUPTS::intr_context_t *context)
     {
+        // info(">>> IRQ%d  RSP=%p RIP=%p CS=%p FLAGS=%p\n",
+        //      irq_num,
+        //      (void *)context->rsp,
+        //      (void *)context->rip,
+        //      (void *)context->cs,
+        //      (void *)context->rflags);
         INTERRUPTS::get_instance().call_irq(irq_num, context);
     }
 }
-static void handler_default(uint8_t intr_num, INTERRUPTS::intr_context_t * ctx)
+static void handler_default(uint8_t intr_num, INTERRUPTS::intr_context_t *ctx)
 {
-    info("Unhandled interrupt %d!\n", intr_num);
+    info(">>> CPU exception %02d at rip=%p <<<\n", intr_num, (void *)ctx->rip);
+    // info("Unhandled interrupt %d!\n", intr_num);
+    //     info(">>> #UD at rip=0x%lx  cs=0x%lx  rflags=0x%lx <<<\n",
+    //      ctx->rip, ctx->cs, ctx->rflags);
     while (1)
     {
         ;
     }
     return;
 }
-
 
 // 定义 IDT 表
 INTERRUPTS::idt_entry_t INTERRUPTS::idt[EXCP_MAX];
@@ -240,7 +253,7 @@ bool INTERRUPTS::init()
 #undef SET_IRQ
 
     // 统一指向默认桩
-    for (uint32_t i = 0; i < EXCP_MAX; i++)
+    for (uint32_t i = 0; i < INTERRUPT_MAX; i++)
     {
         register_intr_handler(i, handler_default);
     }
@@ -253,11 +266,11 @@ bool INTERRUPTS::init()
         err("Failed to load IDT\n");
         return false;
     }
+    // uint64_t *e = (uint64_t *)(idtr.base + 0x20*16);
+    // info("IDT[0x20] %016lx %016lx\n", e[0], e[1]);
+    // uint64_t *e = (uint64_t *)(idtr.base + 34*16);
+    // info("IDT[34]: %016lx %016lx\n", e[0], e[1]);
 
-    // 初始化 APIC
-    // apic_init();
-
-    // info("Interrupt subsystem initialized.\n");
     return true;
 }
 int32_t INTERRUPTS::call_isr(uint8_t _no, intr_context_t* _intr_context)
@@ -292,6 +305,23 @@ void INTERRUPTS::register_intr_handler(uint8_t intr_num, intr_handler_t handler)
 {
     interrupt_handlers[intr_num] = handler;
     return;
+}
+
+
+static constexpr uint16_t PIT_CMD = 0x43;
+static constexpr uint16_t PIT_CH0 = 0x40;
+void INTERRUPTS::init_8254_pit(uint32_t hz)
+{
+    uint16_t divisor = 1193182 / hz;   // 1.193182 MHz 时钟
+    PORT::port_outb(PIT_CMD, 0x34);               // channel 0, lobyte/hibyte, mode 2, binary
+    PORT::port_outb(PIT_CH0, divisor & 0xFF);     // low byte
+    PORT::port_outb(PIT_CH0, divisor >> 8);       // high byte
+        /* ---- 回读 CCR（当前计数值）---- */
+    PORT::port_outb(0x43, 0x00);            // 锁存命令
+    uint8_t  lo = PORT::port_inb(0x40);
+    uint8_t  hi = PORT::port_inb(0x40);
+    uint16_t curr = (hi << 8) | lo;
+    info("PIT curr=%u (div=%u)\n", curr, divisor);
 }
 
 // void INTERRUPTS::send_eoi(uint8_t irq_num)

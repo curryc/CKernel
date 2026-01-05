@@ -161,6 +161,22 @@ public:
     static constexpr const uint32_t IRQ15                = 47;
     // 系统调用
     static constexpr const uint32_t IRQ128               = 128;
+
+    static constexpr uint8_t GSI_PIT        = 2; //!< 8254 定时器 (IRQ0→INTIN2)
+    static constexpr uint8_t GSI_KBD        = 1; //!< 键盘控制器 (IRQ1→INTIN1)
+    static constexpr uint8_t GSI_SLAVE_8259 = 2; //!< 8259 从片级联，与 PIT 共用 INTIN2
+    static constexpr uint8_t GSI_UART0    = 4; //!< 串口 COM1 (IRQ4→INTIN4)
+    static constexpr uint8_t GSI_UART1    = 3; //!< 串口 COM2 (IRQ3→INTIN3)
+    static constexpr uint8_t GSI_LPT1     = 7; //!< 并口 (IRQ7→INTIN7)
+    static constexpr uint8_t GSI_FDC      = 6; //!< 软驱 (IRQ6→INTIN6)
+    static constexpr uint8_t GSI_IDE0    = 14; //!< 主 IDE (IRQ14→INTIN14)
+    static constexpr uint8_t GSI_IDE1    = 15; //!< 从 IDE (IRQ15→INTIN15)
+    /* ---------- 向量号 = 0x20 + GSI ---------- */
+    static constexpr uint8_t VEC_PIT     = 0x20 + GSI_PIT;
+    static constexpr uint8_t VEC_KBD     = 0x20 + GSI_KBD;
+    static constexpr uint8_t VEC_UART0   = 0x20 + GSI_UART0;
+    static constexpr uint8_t VEC_UART1   = 0x20 + GSI_UART1;
+public:
     /**
      * @brief Get the instance object
      * @return INTERRUPTS 
@@ -172,6 +188,9 @@ public:
      * @return false 初始化失败
      */
     bool init();
+
+void init_8254_pit(uint32_t hz);
+void test();
 
     /**
      * @brief 启用中断

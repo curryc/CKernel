@@ -57,6 +57,7 @@ static constexpr uint16_t PIC1_COMMAND = 0x20;
 static constexpr uint16_t PIC1_DATA = 0x21;
 static constexpr uint16_t PIC2_COMMAND = 0xA0;
 static constexpr uint16_t PIC2_DATA = 0xA1;
+
 static bool acpi_checksum(const void *data, size_t len)
 {
     uint8_t sum = 0;
@@ -108,53 +109,6 @@ void APIC::pic_init()
     PORT::port_outb(PIC2_DATA, 0xFF);
 }
 
-void INTERRUPTS::enable_irq(uint8_t gsi)
-{
-    /* 0. 基本合法性检查 */
-    if (gsi >= 24)
-        return; // 只接了 24 条 RTE 为例
-
-    /* 1. 先处理 8259A 兼容线路（GSI0~15） */
-    if (gsi < 16)
-    {
-        uint16_t port;
-        uint8_t mask;
-
-        gsi = gsi - 32;
-        if (gsi >= 8)
-        {
-            port = PIC2_DATA;
-            gsi -= 8;
-        }
-        else
-        {
-            port = PIC1_DATA;
-        }
-
-        mask = PORT::port_inb(port);
-        mask &= ~(1 << gsi);
-        PORT::port_outb(port, mask);
-    }
-
-    /* 2. 再处理 I/O APIC RTE
-         公式：gsi 对应的 RTE 索引 = gsi - ioapic_gsi_base
-         这里我们只有一个 IO-APIC，gsi_base 存于 madt_info.ioapic_gsi_base
-     */
-    uint8_t rte_idx = gsi;
-    uint32_t vector = 0x20 + gsi; // vector = 0x20 + gsi
-    uint32_t high = 0;         // destination = 0 (物理模式，扁平 1 CPU)
-
-    /* 2-1 写高 32 位（destination field） */
-    APIC::get_instance().ioapic_write(0x10 + rte_idx * 2 + 1, high);
-
-    /* 2-2 写低 32 位（vector、delivery、mask=0） */
-    uint32_t low = vector | (0 << 8) | (0 << 11) | (0 << 16);  // mask=0
-    APIC::get_instance().ioapic_write(0x10 + rte_idx * 2, low);
-}
-
-void INTERRUPTS::send_eoi(uint8_t irq_num){
-    APIC::get_instance().lapic_write(LAPIC_EOI, 0);
-}
 
 bool APIC::local_init()
 {
@@ -179,6 +133,11 @@ bool APIC::local_init()
     lapic_write(LAPIC_LVT_LINT1, 1 << 16); // mask LINT1
     lapic_write(LAPIC_LVT_ERROR, 1 << 16); // mask error
     lapic_write(LAPIC_EOI, 0);             // 清 EOI
+
+    lapic_write(LAPIC_LVT_TIMER, 0x00020020); // vector=0x20, periodic
+    lapic_write(LAPIC_TIMER_DIV, 0x3);        // div16
+    lapic_write(LAPIC_TIMER_ICR, 100000);     // 1 MHz 下 100 kHz
+
     return true;
 }
 
@@ -210,6 +169,7 @@ void APIC::timer_init(uint32_t hz)
 {
     /* 0. 先停 Timer（mask 掉，防止旧周期干扰） */
     lapic_write(LAPIC_LVT_TIMER, 1 << 16);   // bit16 = mask
+    // init_8254_pit(100);
 
     /* 1. 分频 */
     lapic_write(LAPIC_TIMER_DIV, 0x3);       // divide by 16
@@ -220,11 +180,6 @@ void APIC::timer_init(uint32_t hz)
 
     /* 3. 最后“点火”：向量 0x20 + periodic + 不屏蔽 */
     lapic_write(LAPIC_LVT_TIMER, 0x20 | (1 << 17)); // 0x20020
-
-    /* debug 回读 */
-    uint32_t lvt = lapic_read(LAPIC_LVT_TIMER);
-    uint32_t icr = lapic_read(LAPIC_TIMER_ICR);
-    info("LVT_TIMER = 0x%x, APIC_TIMER_ICR = %u\n", lvt, icr);
 }
 
 void APIC::acpi_parse_madt(const void *madt)
@@ -306,4 +261,43 @@ APIC &APIC::get_instance()
 {
     static APIC instance;
     return instance;
+}
+
+void INTERRUPTS::test(){
+
+    // /* --- debug：回读 RTE2 --- */
+    // uint32_t lo = APIC::get_instance().ioapic_read(0x10 + 2*2);
+    // uint32_t hi = APIC::get_instance().ioapic_read(0x10 + 2*2 + 1);
+    // info("RTE2 hi=%08x lo=%08x  (mask=%u vector=%u)\n",hi, lo, (lo>>16)&1, lo&0xff);
+}
+
+
+
+void INTERRUPTS::enable_irq(uint8_t gsi)
+{
+    if (gsi >= 24) return;
+
+    /* ---- 1. 8259A 兼容段（若还想用）---- */
+    if (gsi < 16) {
+        uint16_t port = gsi < 8 ? PIC1_DATA : PIC2_DATA;
+        uint8_t  bit  = gsi & 7;
+        uint8_t  mask = PORT::port_inb(port);
+        mask &= ~(1 << bit);
+        PORT::port_outb(port, mask);
+    }
+
+    /* IO-APIC 段 */
+    uint8_t  rte_idx = gsi;
+    uint32_t vector  = 0x20 + gsi;
+    uint32_t high    = 0;                  // dest = 0
+    uint32_t low     = vector | (0 << 16); // mask=0
+
+    APIC::get_instance().ioapic_write(0x10 + rte_idx*2 + 1, high);
+    APIC::get_instance().ioapic_write(0x10 + rte_idx*2,     low);
+    info("RTE%d hi=%08x lo=%08x  (mask=%u vector=%u)\n",
+         rte_idx, high, low, (low>>16)&1, low&0xff);   
+}
+
+void INTERRUPTS::send_eoi(uint8_t irq_num){
+    APIC::get_instance().lapic_write(LAPIC_EOI, 0);
 }

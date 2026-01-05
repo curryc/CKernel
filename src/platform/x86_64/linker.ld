@@ -10,6 +10,12 @@ OUTPUT_ARCH(i386:x86-64)
 /* 设置入口点 */
 ENTRY(_start)
 
+/* 1. 内核虚拟基址 */
+KERNEL_VIRT_BASE = 0xffffffff80000000;
+/* 2. 物理加载地址（bootloader 仍放在 1 MB） */
+KERNEL_PHYS_BASE = 1M;
+__executable_start = KERNEL_PHYS_BASE;
+
 SECTIONS {
     /* 设置可执行文件起始地址 */
     PROVIDE (__executable_start = SEGMENT_START("text-segment", 1M));

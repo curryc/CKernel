@@ -9,6 +9,11 @@
 #include "cstdint"
 #include "cstdio"
 
+
+static GDT::tss64_t g_tss __attribute__((aligned(16))) = {0};
+/* 1 KiB 临时内核栈，16 字节对齐 */
+static uint8_t ist_stack[1024];
+
 namespace GDT
 {
     // 加载 GDTR
@@ -58,8 +63,39 @@ namespace GDT
         // 用户模式数据段
         set_gdt(GDT_USER_DATA, 0x0, 0x0, TYPE_DATA_READ_WRITE, S_CODE_DATA,
                 CPU::DPL3, SEGMENT_PRESENT, 0x0, L_64BIT, 0x0, 0x0);
+        // TSS
+        // 1. 给 rsp0 赋一个“现成”的内核栈顶
+        uint64_t stack_top = (uint64_t)(ist_stack + sizeof(ist_stack));
+        g_tss.rsp0_lower32 = (uint32_t)stack_top;
+        g_tss.rsp0_upper32 = (uint32_t)(stack_top >> 32);
+
+        /* 没有 IO 位图，把 io_map_base_addr 指向 TSS 末尾 */
+        g_tss.io_map_base_addr = sizeof(g_tss);
+
+        // 3. 构造 128-bit TSS 描述符（64-bit TSS 必须占两项）
+        uint64_t tss_base = (uint64_t)&g_tss;
+        uint64_t tss_limit = sizeof(g_tss) - 1;
+
+        // 低 64-bit
+        set_gdt(GDT_TSS_LOW,
+                tss_base & 0xFFFFFFFFU,
+                tss_limit & 0xFFFFU,
+                TYPE_SYSTEM_64_TSS_AVAILABLE,
+                S_SYSTEM, CPU::DPL0, SEGMENT_PRESENT,
+                0, L_64BIT, 0, G_4KB);
+
+        // 高 64-bit（base[63:32] + limit[19:16]）
+        set_gdt(GDT_TSS_HIGH,
+                (tss_base >> 32) & 0xFFFFFFFFU,
+                (tss_limit >> 16) & 0xFU,
+                0, 0, 0, 0, 0, 0, 0, 0); // 高 32-bit 描述符，type=0
         // 加载全局描述符表地址到 GDTR 寄存器
         gdt_load((uint64_t)&gdt_ptr64);
+
+        // 5. 加载 TSS 选择子（0x28 = GDT_TSS_LOW<<3）
+        asm volatile("ltr  %w0" ::"q"(GDT_TSS_LOW << 3));
+
+        // info("GDT init done\n");
         return 0;
     }
 };

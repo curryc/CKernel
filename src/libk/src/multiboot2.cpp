@@ -8,6 +8,7 @@
 #include "multiboot2.h"
 #include "cassert"
 #include "common.h"
+#include "cstdio"
 #include "vgaprint.h"
 
 MULTIBOOT2 &MULTIBOOT2::get_instance(void)

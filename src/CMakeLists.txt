@@ -10,13 +10,14 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # 禁用堆栈保护和格式字符串检查
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-stack-protector -U_FORTIFY_SOURCE -fno-pic")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-stack-protector -U_FORTIFY_SOURCE -fno-pic -fno-exceptions -fno-rtti -O0 -ggdb3 -Wextra")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-stack-protector -U_FORTIFY_SOURCE -mcmodel=kernel -mno-red-zone -fno-pic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-stack-protector -U_FORTIFY_SOURCE -mcmodel=kernel -mno-red-zone -fno-pic -fno-exceptions -fno-rtti -O0 -ggdb3 -Wextra")
 set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS} -f elf64")
 
 # 禁用标准库、启动文件、系统库
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffreestanding -nostdlib -nostartfiles -nodefaultlibs")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffreestanding -nostdlib -nostartfiles -nodefaultlibs")
+
 
 # 添加头文件目录
 include_directories(include)
@@ -86,7 +87,13 @@ if(TARGET boot_grub_x86_64)
     # GRUB运行目标
     add_custom_target(run-grub
         COMMAND qemu-system-x86_64 -cdrom ${ISO_FILE} 
-        -m 128M
+        -m 128M 
+        -machine q35
+        -cpu max,,apic=on,-tsc-deadline 
+        -global lapic.frequency=1000000   # cpu频率 1 MHz
+        # -enable-kvm # 开启硬件模拟，需要平台硬件支持
+        -serial stdio 
+        -gdb tcp::1234 
         DEPENDS grub_iso
         USES_TERMINAL
     )
